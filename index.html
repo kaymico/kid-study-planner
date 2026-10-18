@@ -86,6 +86,24 @@ header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:1
 .exam.cap{border-color:var(--primary);background:var(--primary-soft)}
 .exam.cap .d{color:var(--primary)}
 .item.moved{opacity:.6;border-style:dashed}
+.mood{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--primary-soft);border-radius:16px;padding:10px 14px}
+.mood-btn{display:flex;flex-direction:column;align-items:center;gap:2px;border:2px solid var(--line);border-radius:14px;background:var(--paper);padding:4px 8px;font-size:13px;font-weight:700}
+.mood-btn .capy{width:58px}
+.mood-btn[aria-pressed="true"]{border-color:var(--ink)}
+.contact{border:2px solid var(--primary);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.chk{display:flex;gap:10px;align-items:flex-start;text-align:left;background:none;border:0;padding:2px 0;width:100%}
+.chk .box{width:22px;height:22px;border:2px solid var(--ink);border-radius:6px;flex:none;display:grid;place-items:center;font-size:14px;line-height:1}
+.chk.on .box{background:var(--ok);border-color:var(--ok);color:var(--paper)}
+.chk.on .tx{text-decoration:line-through;opacity:.6}
+.closet{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.cl-item{display:flex;flex-direction:column;align-items:center;gap:4px;border:2px solid var(--line);border-radius:14px;background:var(--paper);padding:6px;font-size:13px}
+.cl-item .capy{width:80px}
+.cl-item.wearing{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.units{display:flex;gap:6px;flex-wrap:wrap}
+.unit-btn{border:2px solid var(--line);border-radius:12px;background:var(--paper);padding:6px 12px;font-weight:700}
+.flash{border:2px solid var(--ink);border-radius:20px;min-height:180px;display:grid;place-items:center;text-align:center;padding:20px;cursor:pointer;background:var(--paper)}
+.flash .w{font-family:var(--f-display);font-size:34px;line-height:1.2;overflow-wrap:anywhere}
+.reply-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .hero{display:flex;gap:12px;align-items:flex-end;min-width:0}
 .hero .hello{min-width:0}
 .mascot{width:100px;flex:none;cursor:pointer;background:none;border:0;padding:0}
@@ -397,6 +415,12 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
       <input type="file" id="bk-file" accept=".json,application/json,text/plain" hidden>
     </div>
     <div id="bk-confirm"></div>
+    <div id="sync-sec" hidden>
+      <div class="divider" style="margin:18px 0"></div>
+      <h3>家長同步</h3>
+      <p class="muted small" id="sync-hint">接上免費的 Firebase 雲端資料庫之後，爸媽在自己的手機打開這個網站，就能看到孩子的進度。</p>
+      <div id="sync-body"></div>
+    </div>
   </section>
 
   <!-- NOTES -->
@@ -423,6 +447,13 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
       <button class="btn" type="submit">加入考試</button>
     </form>
     <ul class="rem-list" id="exam-list"></ul>
+    <div class="divider"></div>
+    <div class="bag" style="border-color:var(--primary)">
+      <div class="label">加到手機行事曆</div>
+      <span>把讀書時間、補習、考試和提醒放進 iPhone 的「行事曆」。這樣就算沒打開小書包，時間到手機也會通知。</span>
+      <span class="small muted">之後改了課表、補習或考試，要再按一次。iPhone 請用 Safari 打開這個網站再按，才會跳出「加入行事曆」。</span>
+      <div><button class="btn primary" id="ics-btn" type="button">加到行事曆</button></div>
+    </div>
     <div class="divider"></div>
     <div class="row between">
       <h2>提醒</h2>
@@ -480,6 +511,7 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
     <div class="divider"></div>
     <h3>給孩子一句話</h3>
     <p class="muted small">孩子打開「今日計劃」時會在最上面看到。</p>
+    <div id="msg-reply"></div>
     <form class="form" id="msg-form">
       <div class="field full"><label for="pm-text">想說的話</label><input id="pm-text" maxlength="60" placeholder="例如：今天數學小考辛苦了，晚上一起吃冰淇淋！" required></div>
       <button class="btn primary" type="submit">送出</button>
@@ -569,6 +601,7 @@ function normalize(m){
     activities:Array.isArray(m.activities)?m.activities:[],
     rewards:Array.isArray(m.rewards)?m.rewards:[],
     redemptions:Array.isArray(m.redemptions)?m.redemptions:[],
+    closet:Object.assign({owned:[],wearing:''},m.closet||{}),
     reminders:Array.isArray(m.reminders)?m.reminders:[],
     exams:Array.isArray(m.exams)?m.exams:[],
     school:Object.assign({name:'',grade:'',term:'上'},m.school||{}),
@@ -621,6 +654,7 @@ function buildPlan(dow){
   const bed=toMin(s.bedtime||'22:30');
   const add=(kind,id,title,mins,sid,note)=>{
     if(moved[id]){movedOut.push({id,title,mins,sid});return}
+    if(tired&&kind==='preview'){lightened.push(title);return}
     for(const a of acts) if(t<a.e&&t+mins>a.s){ if(!a.shown){a.shown=true;items.push({id:'act-'+a.id,kind:'activity',title:a.name,mins:a.e-a.s,start:a.s,note:a.start+'–'+a.end})} t=Math.max(t,a.e) }
     if(t+mins>bed&&kind!=='pack'){ if(kind!=='break') overflow.push(title); return }
     items.push({id,kind,title,mins,sid,note,start:t});t+=mins};
@@ -629,7 +663,7 @@ function buildPlan(dow){
     acts.forEach(a=>{if(!a.shown&&a.e>first&&a.s<bed){a.shown=true;items.push({id:'act-'+a.id,kind:'activity',title:a.name,mins:a.e-a.s,start:a.s,note:a.start+'–'+a.end})}});
     items.sort((a,b)=>a.start-b.start);
     while(items.length&&items[items.length-1].kind==='break') items.pop();
-    items.overflow=overflow; items.movedOut=movedOut; return items;
+    items.overflow=overflow; items.movedOut=movedOut; items.lightened=lightened; return items;
   };
   const wrongN=wrongList().filter(w=>w.due<=dk).length;
   const wrongBlock=wrongN?[['wrong','wrong','錯題複習',Math.min(20,5+wrongN*2),null,`錯題本有 ${wrongN} 題要複習`]]:[];
@@ -637,6 +671,7 @@ function buildPlan(dow){
   const isStudy=id=>{const x=subj(id);return x&&x.study};
   const weekend=dow===0||dow===6;
   const moved=(progress[dk]&&progress[dk].moved)||{}, movedOut=[]; items.movedOut=movedOut;
+  const tired=progress[dk]&&progress[dk].mood==='tired', lightened=[]; items.lightened=lightened;
   // exam blocks: nearest exam per subject within 7 days, not today
   const ex={}; upcomingExams(dk).forEach(e=>{if(e.days>=1&&e.days<=7&&subj(e.sid)&&!ex[e.sid]) ex[e.sid]=e});
   const examBlocks=Object.values(ex).map(e=>['exam','exam-'+e.sid,subj(e.sid).name+' 考前複習',(weekend?30:+s.review)+boost(e.days),e.sid,
@@ -666,7 +701,10 @@ function buildPlan(dow){
 function renderParentMsg(){
   const m=main.message, el=$('parent-msg');
   if(!m||!m.text||m.read){el.innerHTML='';return}
-  el.innerHTML=`<div class="msg"><div><div class="who">爸媽想對你說</div><div class="text">${esc(m.text)}</div></div><button class="btn ghost" id="msg-read">收到了</button></div>`;
+  el.innerHTML=`<div class="msg"><div><div class="who">爸媽想對你說</div><div class="text">${esc(m.text)}</div>
+    <div class="reply-row">${['收到！','謝謝爸媽','我會加油','好累喔，抱抱'].map(t=>`<button class="btn ghost" data-reply="${t}" style="padding:4px 10px">${t}</button>`).join('')}</div>
+    <div class="reply-row"><input class="inline-input" id="reply-text" maxlength="40" placeholder="或自己打一句話" style="flex:1;min-width:140px"><button class="btn" id="reply-send" type="button" style="padding:4px 12px">回覆</button></div>
+  </div></div>`;
 }
 function renderExamStrip(){
   const list=upcomingExams(todayKey()).slice(0,4), el=$('exam-strip');
@@ -716,7 +754,8 @@ function renderPlan(){
     const tag=s?`<span class="subj" style="--h:${s.h}">${esc(s.name)}</span>`:'';
     const kind={redo:it.title,cap:it.title.split(' ').slice(1).join(' '),wrong:'錯題複習',hw:'作業',review:it.title.includes('一週')?'一週複習':'複習',preview:'預習',pack:'書包',exam:'考前複習'}[it.kind]||it.title;
     const en=it.exam&&noteForExam(it.exam.id);
-    const practice=en?`<button class="go" data-opennote="${en}">看段考重點、做模擬題 →</button>`
+    const mockOk=it.exam&&it.exam.days<=3&&mockCandidates().some(c=>c.e.id===it.exam.id);
+    const practice=mockOk?`<button class="go" data-mockstart="${it.exam.id}">做模擬考 →</button>`:en?`<button class="go" data-opennote="${en}">看段考重點、做模擬題 →</button>`
       :it.exam&&ask?`<button class="go" data-examnote="${it.exam.id}">幫我整理這次考試的重點 →</button>`
       :it.kind==='wrong'?`<button class="go" data-wrongstart="1">開始錯題複習 →</button>`
       :s&&(it.kind==='exam'||it.kind==='review')&&noteSubjects.has(s.id)?`<button class="go" data-practice="${s.id}">去做 ${esc(s.name)} 練習題 →</button>`:'';
@@ -732,12 +771,15 @@ function renderPlan(){
     </li>`}).join('');
   const total=tasks.length, pct=total?nDone/total:0, starN=Math.round(pct*5);
   $('plan-body').innerHTML=`<div style="display:flex;flex-direction:column;gap:14px">
+    ${isToday?moodHTML(dk):''}
+    ${isToday&&viewDow>=1&&viewDow<=5?contactHTML(dk):''}
     <div class="progress"><span class="stars">${'★'.repeat(starN)}<span class="off">${'★'.repeat(5-starN)}</span></span>
       <div class="trail" aria-hidden="true"><div class="track"><i style="width:${pct*100}%"></i></div><div class="walker" style="left:calc(23px + (100% - 53px) * ${pct})">${capy(pct===1?'happy':'normal')}</div><span class="onsen">♨</span></div>
       <b style="font-variant-numeric:tabular-nums;white-space:nowrap">${nDone}/${total}${nDone===total&&total?' 全部完成！':''}</b></div>
     ${total&&nDone===total?`<div class="celebrate"><div class="capy">${capy('happy',true)}</div><div><b>全部完成！</b><br>豚豚去泡溫泉了，你也好好休息吧。</div></div>`:''}
     ${items.length?`<ol class="plan">${list}</ol>`:`<div class="empty"><div class="capy" style="width:120px">${capy('sleep')}</div>這天沒有排讀書，好好休息！</div>`}
     ${items.movedOut&&items.movedOut.length?`<div class="bag" style="border-color:var(--line)"><div class="label">已經改到週末</div>${items.movedOut.map(m=>`<div class="row between"><span>${esc(m.title)}（${m.mins} 分鐘）</span><button class="go" data-unmove="${m.id}">放回今天</button></div>`).join('')}</div>`:''}
+    ${items.lightened&&items.lightened.length?`<div class="note">今天比較累，預習先跳過：${items.lightened.map(esc).join('、')}。早點休息！</div>`:''}
     ${items.overflow&&items.overflow.length?`<div class="warnbox">已經超過 ${esc(main.settings.bedtime||'22:30')}，這些今天排不下：${items.overflow.map(esc).join('、')}。可以改到週末讀，或把每科的分鐘數調少一點。</div>`:''}
     ${bagHTML()}
     ${shopHTML()}</div>`;
@@ -753,9 +795,22 @@ function bagHTML(){
       +examTomorrow.map(e=>`<li><b>要考 ${esc(subj(e.sid)?.name||'')}：</b>${esc(e.title)}，記得帶鉛筆、橡皮擦</li>`).join('')+'</ul>'
     :'<span class="muted small">沒有特別要帶的東西。</span>')+'</div>';
 }
+$('panel-plan').addEventListener('change',e=>{if(e.target.id==='cb-photo'&&e.target.files[0]){readContactBook(e.target.files[0]);e.target.value=''}});
 $('panel-plan').addEventListener('click',e=>{
   const d=e.target.closest('.day'); if(d){viewDow=+d.dataset.d;renderPlan();return}
   const fb=e.target.closest('[data-focus]'); if(fb){startFocus(fb.dataset.focus);return}
+  const md=e.target.closest('[data-mood]'); if(md){const v=md.dataset.mood; moodEdit=false; editProgress(todayKey(),p=>{p.mood=v}); renderPlan(); renderParent();
+    toast(v==='tired'?'辛苦了，今天預習先跳過，早點睡':v==='good'?'太好了！一起加油':'慢慢來就好'); return}
+  if(e.target.id==='mood-edit'){moodEdit=true;renderPlan();return}
+  const cb=e.target.closest('[data-cbhw]'); if(cb){const i=+cb.dataset.cbhw; let on=false; editProgress(todayKey(),p=>{const h=p.contact&&p.contact.hw[i]; if(h){h.done=!h.done;on=h.done}}); renderPlan(); if(on) toast('寫完一項！+1 柚子'); return}
+  if(e.target.id==='cb-add-btn'){const t=($('cb-add').value||'').trim(); if(!t) return; editProgress(todayKey(),p=>{p.contact=p.contact||{hw:[],bring:[],notes:[]}; p.contact.hw.push({t,done:false})}); renderPlan(); return}
+  if(e.target.id==='cb-apply'){applyContact();return}
+  if(e.target.id==='cb-cancel'){contactPreview=null;renderPlan();return}
+  const by=e.target.closest('[data-buy]'); if(by){const it=CLOSET.find(c=>c[0]===by.dataset.buy); if(!it) return;
+    if(yuzuBalance()<it[2]){toast('柚子還不夠喔');return}
+    if(buyArmed!==it[0]){buyArmed=it[0];renderPlan();setTimeout(()=>{if(buyArmed===it[0]){buyArmed=null;renderPlan()}},3000);return}
+    buyArmed=null; main.closet.owned=uniq([...(main.closet.owned||[]),it[0]]); main.closet.wearing=it[0]; saveMain(); $('mascot').innerHTML=capy('happy'); toast(`豚豚戴上${it[1]}了！`); return}
+  const wr=e.target.closest('[data-wear]'); if(wr){main.closet.wearing=main.closet.wearing===wr.dataset.wear?'':wr.dataset.wear; saveMain(); $('mascot').innerHTML=capy('normal'); return}
   const mv=e.target.closest('[data-move]'); if(mv){moveToWeekend(mv.dataset.move);return}
   const um=e.target.closest('[data-unmove]'); if(um){undoMove(um.dataset.unmove);return}
   const c=e.target.closest('.check');
@@ -771,6 +826,9 @@ $('panel-plan').addEventListener('click',e=>{
   }
   const pr=e.target.closest('[data-practice]'); if(pr){practiceFilter=pr.dataset.practice;openNote=null;showTab('notes');return}
   if(e.target.id==='msg-read'){main.message={...main.message,read:true};saveMain();return}
+  const rp=e.target.closest('[data-reply]'); const rs=e.target.id==='reply-send';
+  if(rp||rs){const t=rp?rp.dataset.reply:($('reply-text').value||'').trim(); if(!t) return;
+    main.message={...main.message,read:true,reply:{text:t,at:new Date().toISOString()}}; saveMain(); toast('回覆送出了'); return}
   const rd=e.target.closest('[data-redeem]');
   if(rd){
     const r=main.rewards.find(x=>x.id===rd.dataset.redeem); if(!r) return;
@@ -920,6 +978,8 @@ function lastScore(n){const a=n.attempts||[];return a.length?a[a.length-1]:null}
 function renderNotes(){
   const v=$('notes-view');
   if(quiz) return renderQuiz(v);
+  if(flash) return renderFlash(v);
+  if(spell) return renderSpell(v);
   if(openNote&&notes[openNote]) return renderNoteDetail(v,openNote);
   const sc=main.school;
   const studySubjects=main.subjects.filter(s=>s.study);
@@ -950,6 +1010,17 @@ function renderNotes(){
     <p class="muted small">AI 會照著年級和課本版本整理重點，再出 5 題選擇題。打上或拍下課本內容會最準；沒有提供的話，它只能依課綱和常見教材來整理，內容請爸媽或老師幫忙看一下。</p>`
     :`<div class="note">AI 整理重點要在 Claude 裡打開這一頁才能用。已經整理好的重點和練習題還是可以看、可以練習。</div>`}
     <div class="divider"></div>
+    ${mockCandidates().map(c=>`<div class="bag" style="border-color:var(--bad)"><div class="row between"><div><div class="label">模擬考</div><b style="font-family:var(--f-display);font-size:18px">${esc(subj(c.e.sid).name)} ${esc(c.e.title)}（${c.e.days===0?'今天':c.e.days+' 天後'}）</b>
+      <div class="small muted">從這一科的練習題抽 ${Math.min(20,c.items.length)} 題，限時作答，像真的考試一樣。</div></div><button class="btn primary" data-mock="${c.e.id}">開始模擬考</button></div></div>`).join('')}
+    <div class="bag"><div class="label">數學無限練習（國二上）</div><span class="small muted">程式自動出題，每次數字都不一樣，不用網路也能練。答錯的會進錯題本。</span>
+      <div class="units">${MATH_UNITS.map(u=>`<button class="unit-btn" data-mathgen="${u.id}">${u.name}</button>`).join('')}</div></div>
+    <div class="bag"><div class="label">英文單字卡</div>
+      <form class="form" id="vocab-form">
+        <div class="field full"><label for="vc-title">哪一課</label><input id="vc-title" maxlength="20" placeholder="例如：翰林 L3" value="${esc(drafts['vc-title']||'')}" required></div>
+        <div class="field full"><label for="vc-text">一行一個：英文 中文</label><textarea id="vc-text" maxlength="4000" placeholder="apple 蘋果&#10;borrow 借入&#10;library 圖書館">${esc(drafts['vc-text']||'')}</textarea></div>
+        ${ask&&imagesOK?`<div class="field full"><label for="vc-photo">或拍單字表，自動填進上面（可選）</label><input type="file" id="vc-photo" accept="image/*" ${vocabGen?'disabled':''}></div>`:''}
+        <button class="btn primary" type="submit">${vocabGen?'正在讀單字……':'做成單字卡'}</button>
+      </form></div>
     ${(()=>{const all=wrongList(),due=wrongDue();return all.length?`<div class="bag" style="border-color:var(--bad)"><div class="row between"><div><div class="label">錯題本</div>
       <b style="font-family:var(--f-display);font-size:18px">${due.length?`今天要複習 ${due.length} 題`:'今天沒有要複習的錯題'}</b>
       <div class="small muted">共 ${all.length} 題。每題要在第 1、3、7 天各答對一次才會畢業。</div></div>${due.length?'<button class="btn primary" id="w-start">開始複習</button>':''}</div></div>`:''})()}
@@ -959,9 +1030,29 @@ function renderNotes(){
       return `<button class="ncard" data-open="${n.id}">
         <div class="row" style="gap:6px">${s?`<span class="subj" style="--h:${s.h}">${esc(s.name)}</span>`:''}${n.publisher?`<span class="pill plain">${esc(n.publisher)}</span>`:''}${n.examId?'<span class="pill exam">段考</span>':''}${n.example?'<span class="pill next">範例</span>':''}</div>
         <div class="tl">${esc(n.title||n.unit)}</div>
-        <div class="meta">${(n.sections||[]).length?n.sections.length+' 課／章':(n.points||[]).length+' 個重點'}・${(n.questions||[]).length} 題練習${ls?`・上次 ${ls.score}/${ls.total}`:'・還沒練習'}</div></button>`}).join('')}</div>`
+        <div class="meta">${n.type==='vocab'?(n.cards||[]).length+' 個單字':(n.sections||[]).length?n.sections.length+' 課／章':(n.points||[]).length+' 個重點'}・${(n.questions||[]).length} 題練習${ls?`・上次 ${ls.score}/${ls.total}`:'・還沒練習'}</div></button>`}).join('')}</div>`
       :'<div class="empty">還沒有重點筆記。在上面填好科目和第幾課，按「幫我整理重點和出題」。</div>'}
   </div>`;
+}
+function renderFlash(v){
+  const n=notes[flash.nid]; if(!n){flash=null;return renderNotes()} const c=n.cards[flash.i];
+  v.innerHTML=`<div style="display:flex;flex-direction:column;gap:14px">
+    <div class="row between"><button class="go" id="fl-exit">← 回到單字表</button><span class="small muted">${flash.i+1} / ${n.cards.length}</span></div>
+    <div class="flash" id="fl-card" role="button" tabindex="0" aria-label="翻面"><div><div class="w">${esc(flash.flipped?c.m:c.w)}</div><div class="small muted" style="margin-top:8px">${flash.flipped?esc(c.w):'點一下看中文'}</div></div></div>
+    <div class="row" style="justify-content:center"><button class="btn ghost" id="fl-prev" ${flash.i===0?'disabled':''}>上一張</button><button class="btn sun" id="fl-say">🔊 發音</button><button class="btn" id="fl-next">${flash.i+1<n.cards.length?'下一張':'完成'}</button></div></div>`;
+}
+function renderSpell(v){
+  const n=notes[spell.nid]; if(!n){spell=null;return renderNotes()}
+  if(spell.i>=spell.order.length){v.innerHTML=`<div class="quiz" style="text-align:center;align-items:center"><div class="capy" style="width:130px">${capy(spell.score/spell.order.length>=0.6?'happy':'normal')}</div>
+    <div class="q">拼對 ${spell.score} / ${spell.order.length} 個</div><p class="muted">${spell.miss.length?'要再練的：'+spell.miss.map(esc).join('、'):'全部拼對，太厲害了！'}</p>
+    <div class="row" style="justify-content:center"><button class="btn primary" id="sp-again">再考一次</button><button class="btn ghost" id="sp-exit">回到單字表</button></div></div>`; return}
+  const c=n.cards[spell.order[spell.i]];
+  v.innerHTML=`<div class="quiz"><div class="row between"><span class="label">拼字測驗・第 ${spell.i+1} 題 / 共 ${spell.order.length} 題</span><span class="small muted">拼對 ${spell.score}</span></div>
+    <div class="q">${esc(c.m)}</div><div><button class="btn ghost" id="sp-say" style="padding:4px 12px">🔊 聽發音</button></div>
+    <div class="row"><input class="inline-input" id="sp-in" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="打出英文" style="flex:1;min-width:150px" ${spell.checked?'disabled':''}>${spell.checked?'':'<button class="btn" id="sp-check">確定</button>'}</div>
+    ${spell.checked?`<div class="${spell.ok?'note':'warnbox'}">${spell.ok?'拼對了！':'正確答案是 <b>'+esc(c.w)+'</b>'}</div><div><button class="btn" id="sp-next">下一題</button></div>`:''}
+    <div><button class="go" id="sp-exit">先不考了</button></div></div>`;
+  const inp=$('sp-in'); if(inp&&!spell.checked) setTimeout(()=>inp.focus(),0); if(inp&&spell.checked) inp.value=spell.last||'';
 }
 function renderNoteDetail(v,id){
   const n=notes[id], s=subj(n.sid), att=n.attempts||[];
@@ -969,11 +1060,13 @@ function renderNoteDetail(v,id){
     <div><button class="go" id="n-back">← 回到重點筆記</button></div>
     <div class="row">${s?`<span class="subj" style="--h:${s.h}">${esc(s.name)}</span>`:''}${n.publisher?`<span class="pill plain">${esc(n.publisher)}版</span>`:''}<span class="small muted">${esc(n.grade||'')}${n.term?'・'+esc(n.term)+'學期':''}・${esc(n.unit||'')}</span></div>
     <h2>${esc(n.title||n.unit)}</h2>
+    ${n.type==='vocab'?`<div class="row"><button class="btn sun" id="fl-start">翻卡片</button><button class="btn" id="sp-start">拼字測驗</button></div>
+      <div class="terms">${(n.cards||[]).map((c,i)=>`<div class="term"><b>${esc(c.w)} <button class="go" data-say="${i}" aria-label="念 ${esc(c.w)}">🔊</button></b>${esc(c.m)}</div>`).join('')}</div>`:''}
     ${(()=>{const ex=n.examId&&main.exams.find(x=>x.id===n.examId);if(!ex)return'';const d=daysBetween(todayKey(),ex.date);return d>=0?`<div><span class="pill exam">${d===0?'今天考試，加油！':'距離考試 '+d+' 天'}</span></div>`:''})()}
     ${n.uncertain?'<div class="warnbox">這份重點是依課綱和常見教材整理的，跟課本可能不完全一樣，請對照課本看。</div>':''}
     ${n.example?'<div class="warnbox">這是示範用的範例筆記。</div>':''}
     ${(n.sections||[]).length?`<div style="display:flex;flex-direction:column;gap:14px">${n.sections.map(sec=>`<div><h3 style="margin-bottom:6px">${esc(sec.name)}</h3><ol class="points">${sec.points.map(p=>`<li>${esc(p)}</li>`).join('')}</ol></div>`).join('')}</div>`
-      :`<div><div class="label" style="margin-bottom:6px">上課重點</div><ol class="points">${(n.points||[]).map(p=>`<li>${esc(p)}</li>`).join('')}</ol></div>`}
+      :n.type==='vocab'?'':`<div><div class="label" style="margin-bottom:6px">上課重點</div><ol class="points">${(n.points||[]).map(p=>`<li>${esc(p)}</li>`).join('')}</ol></div>`}
     ${(n.tips||[]).length?`<div class="warnbox"><b>考前提醒：</b>${n.tips.map(esc).join(' ')}</div>`:''}
     ${(n.terms||[]).length?`<div><div class="label" style="margin-bottom:6px">要記住的</div><div class="terms">${n.terms.map(t=>`<div class="term"><b>${esc(t.word)}</b>${esc(t.meaning)}</div>`).join('')}</div></div>`:''}
     <div class="row">
@@ -983,7 +1076,7 @@ function renderNoteDetail(v,id){
     ${att.length?`<p class="small muted">練習紀錄：${att.slice(-5).map(a=>`${a.score}/${a.total}`).join('、')}</p>`:''}
   </div>`;
 }
-function quizQ(){const it=quiz.items[quiz.i];if(!it)return null;const n=notes[it.nid];return n&&n.questions&&n.questions[it.qi]?{n,q:n.questions[it.qi],it}:null}
+function quizQ(){const it=quiz.items[quiz.i];if(!it)return null; if(it.gen) return {n:{sid:mathSid(),title:quiz.title||'數學自動練習'},q:it.q,it}; const n=notes[it.nid];return n&&n.questions&&n.questions[it.qi]?{n,q:n.questions[it.qi],it}:null}
 function renderQuiz(v){
   const total=quiz.items.length, cur=quizQ();
   if(quiz.i>=total||!cur){
@@ -995,12 +1088,13 @@ function renderQuiz(v){
       <p class="muted">${quiz.review?(quiz.cleared?`有 ${quiz.cleared} 題從錯題本畢業了！`:'')+`錯題本還有 ${wrongList().length} 題。`
         :quiz.score===total?'全部答對，太厲害了！':quiz.score>=total*0.6?'很不錯！答錯的題目已經放進錯題本，明天再練一次。':'沒關係，答錯的題目放進錯題本了，明天再練。'}</p>
       <p class="row small muted" style="justify-content:center;gap:4px">${yuzu(18)} 這次得到 ${got} 顆柚子</p>
-      <div class="row" style="justify-content:center">${quiz.review?'':'<button class="btn primary" id="q-again">再練一次</button>'}<button class="btn ghost" id="q-exit">${quiz.review?'回到重點練習':'看重點'}</button></div></div>`;
+      ${quiz.mock?`<p class="small muted">模擬考成績記下來了，${quiz.score/Math.max(1,total)>=0.8?'準備得很好！':'錯的題目都進錯題本了，考前再複習一次。'}</p>`:''}
+      <div class="row" style="justify-content:center">${quiz.review||quiz.mock?'':'<button class="btn primary" id="q-again">再練一次</button>'}<button class="btn ghost" id="q-exit">${quiz.review?'回到重點練習':'看重點'}</button></div></div>`;
     return;
   }
   const {q,n}=cur, s=subj(n.sid), L='ABCD';
   v.innerHTML=`<div class="quiz">
-    <div class="row between"><span class="label">${quiz.review?'錯題複習・':''}第 ${quiz.i+1} 題 / 共 ${total} 題</span><span class="small muted">答對 ${quiz.score} 題</span></div>
+    <div class="row between"><span class="label">${quiz.review?'錯題複習・':quiz.mock?'模擬考・':quiz.genUnit?esc(quiz.title)+'・':''}第 ${quiz.i+1} 題 / 共 ${total} 題</span><span class="small muted">${quiz.mock?`剩下 <b id="mock-left">${mockLeft()}</b>`:`答對 ${quiz.score} 題`}</span></div>
     ${quiz.review?`<div class="row">${s?`<span class="subj" style="--h:${s.h}">${esc(s.name)}</span>`:''}<span class="small muted">${esc(n.title||n.unit||'')}</span></div>`:''}
     <div class="q">${esc(q.q)}</div>
     <div class="opts">${q.options.map((o,i)=>{
@@ -1011,25 +1105,51 @@ function renderQuiz(v){
     <div><button class="go" id="q-exit">先不練了</button></div>
   </div>`;
 }
+function mockLeft(){if(!quiz||!quiz.mock)return '';const l=Math.max(0,quiz.mock.endAt-Date.now());return pad(Math.floor(l/60000))+':'+pad(Math.floor(l/1000)%60)}
+setInterval(()=>{ if(!quiz||!quiz.mock||quiz.i>=quiz.items.length) return; const el=$('mock-left'); if(el) el.textContent=mockLeft();
+  if(Date.now()>=quiz.mock.endAt){quiz.i=quiz.items.length;quiz.picked=null;finishMock();renderNotes();toast('時間到！來看成績')} },1000);
+function finishMock(){ if(!quiz||!quiz.mock||quiz.mock.saved) return; quiz.mock.saved=true; const q=quiz;
+  editProgress(todayKey(),p=>{p.mocks=(p.mocks||[]).concat({sid:q.mock.sid,eid:q.mock.eid,score:q.score,total:q.items.length,at:new Date().toISOString()})}); renderParent() }
 function addDays(dk,n){const d=new Date(dk+'T00:00:00');d.setDate(d.getDate()+n);return dkey(d)}
 function wrongList(){
   return Object.entries(notes).flatMap(([nid,n])=>Object.entries((n&&n.wrong)||{}).filter(([qi])=>n.questions&&n.questions[+qi]).map(([qi,w])=>({nid,qi:+qi,stage:w.stage||0,due:w.due||todayKey()})));
 }
 function wrongDue(){return wrongList().filter(w=>w.due<=todayKey()).sort((a,b)=>a.due.localeCompare(b.due)).slice(0,15).map(w=>({nid:w.nid,qi:w.qi}))}
 function startWrongReview(){const items=wrongDue(); if(!items.length){toast('今天沒有要複習的錯題');return} quiz={review:true,items,i:0,score:0,cleared:0,picked:null}; openNote=null; renderNotes()}
-let delArmed=false;
+let delArmed=false, keepQuiz=false;
 $('panel-notes').addEventListener('click',e=>{
   const t=e.target;
   const sm=t.closest('[data-mode]'); if(sm){genMode=sm.dataset.mode;renderNotes();return}
+  const mg=t.closest('[data-mathgen]'); if(mg){startMathGen(mg.dataset.mathgen);return}
+  const mk=t.closest('[data-mock]'); if(mk){startMock(mk.dataset.mock);return}
+  const sy=t.closest('[data-say]'); if(sy&&openNote&&notes[openNote]){speak(notes[openNote].cards[+sy.dataset.say].w);return}
+  if(t.id==='fl-start'){flash={nid:openNote,i:0,flipped:false};renderNotes();return}
+  if(t.closest('#fl-card')&&flash){flash.flipped=!flash.flipped;renderNotes();return}
+  if(t.id==='fl-say'&&flash){speak(notes[flash.nid].cards[flash.i].w);return}
+  if(t.id==='fl-prev'&&flash){flash.i=Math.max(0,flash.i-1);flash.flipped=false;renderNotes();return}
+  if(t.id==='fl-next'&&flash){if(flash.i+1<notes[flash.nid].cards.length){flash.i++;flash.flipped=false}else{flash=null;toast('單字卡翻完了！')}renderNotes();return}
+  if(t.id==='fl-exit'){flash=null;renderNotes();return}
+  if(t.id==='sp-start'||t.id==='sp-again'){const nid=spell?spell.nid:openNote, cs=notes[nid].cards||[]; spell={nid,order:cs.map((_,i)=>i).sort(()=>Math.random()-.5).slice(0,15),i:0,score:0,miss:[],checked:false};renderNotes();return}
+  if(t.id==='sp-say'&&spell){speak(notes[spell.nid].cards[spell.order[spell.i]].w);return}
+  if(t.id==='sp-check'&&spell){checkSpell();return}
+  if(t.id==='sp-next'&&spell){spell.i++;spell.checked=false;renderNotes();return}
+  if(t.id==='sp-exit'){spell=null;renderNotes();return}
   const o=t.closest('[data-open]'); if(o){openNote=o.dataset.open;delArmed=false;renderNotes();return}
   if(t.id==='n-back'){openNote=null;renderNotes();return}
   if(t.id==='n-del'){ if(!delArmed){delArmed=true;renderNotes();setTimeout(()=>{delArmed=false;if(openNote)renderNotes()},3000);return}
     delArmed=false; removeNote(openNote); openNote=null; renderAll(); toast('筆記刪掉了'); return}
+  if(t.id==='q-again'&&quiz&&quiz.genUnit){startMathGen(quiz.genUnit);return}
   if(t.id==='q-start'||t.id==='q-again'){const id=(quiz&&quiz.nid0)||openNote; const n=notes[id]; if(!n) return;
     quiz={nid0:id,items:n.questions.map((_,qi)=>({nid:id,qi})),i:0,score:0,cleared:0,picked:null};renderNotes();return}
   if(t.id==='w-start'){startWrongReview();return}
-  if(t.id==='q-exit'){const back=quiz&&quiz.nid0;quiz=null;if(back&&notes[back])openNote=back;renderNotes();return}
+  if(t.id==='q-exit'){const back=quiz&&!quiz.genUnit&&quiz.nid0;quiz=null;openNote=back&&notes[back]?back:null;renderNotes();return}
   const pk=t.closest('[data-pick]');
+  if(pk&&quiz&&quiz.picked==null&&quizQ()&&quizQ().it.gen){
+    const cur=quizQ(); quiz.picked=+pk.dataset.pick; const ok=quiz.picked===cur.q.answer; if(ok) quiz.score++;
+    if(!ok&&notes.mathgen){const nn=clone(notes.mathgen); nn.questions=(nn.questions||[]).concat(cur.q).slice(-200); nn.wrong=nn.wrong||{};
+      nn.wrong[String(nn.questions.length-1)]={stage:0,due:addDays(todayKey(),1)}; notes.mathgen=nn; if(!readOnly) saveNote('mathgen')}
+    renderNotes(); return;
+  }
   if(pk&&quiz&&quiz.picked==null){
     const cur=quizQ(); if(!cur) return;
     quiz.picked=+pk.dataset.pick; const ok=quiz.picked===cur.q.answer; if(ok) quiz.score++;
@@ -1046,7 +1166,8 @@ $('panel-notes').addEventListener('click',e=>{
   }
   if(t.id==='q-next'){
     quiz.i++; quiz.picked=null;
-    if(quiz.i>=quiz.items.length&&!quiz.review&&notes[quiz.nid0]){
+    if(quiz.i>=quiz.items.length&&quiz.mock) finishMock();
+    if(quiz.i>=quiz.items.length&&!quiz.review&&!quiz.mock&&notes[quiz.nid0]){
       const nn=clone(notes[quiz.nid0]); nn.attempts=(nn.attempts||[]).concat({at:new Date().toISOString(),score:quiz.score,total:quiz.items.length}).slice(-20);
       notes[quiz.nid0]=nn; if(!readOnly) saveNote(quiz.nid0);
     }
@@ -1055,9 +1176,31 @@ $('panel-notes').addEventListener('click',e=>{
   if(t.id==='gen-stop'&&genCtl){genCtl.abort();return}
 });
 $('panel-notes').addEventListener('change',e=>{if(e.target.id==='n-filter'){practiceFilter=e.target.value;renderNotes()} if(e.target.id==='ge-exam') genExam=e.target.value});
+function checkSpell(){
+  const c=notes[spell.nid].cards[spell.order[spell.i]], v=($('sp-in').value||'').trim();
+  spell.last=v; spell.ok=v.toLowerCase().replace(/\s+/g,' ')===c.w.toLowerCase().replace(/\s+/g,' '); spell.checked=true;
+  if(spell.ok) spell.score++; else spell.miss.push(c.w); renderNotes();
+}
+$('panel-notes').addEventListener('keydown',e=>{if(e.target.id==='sp-in'&&e.key==='Enter'&&spell&&!spell.checked){e.preventDefault();checkSpell()}});
+$('panel-notes').addEventListener('change',async e=>{
+  if(e.target.id!=='vc-photo'||!e.target.files[0]||!ask) return;
+  const f=e.target.files[0]; vocabGen=true; renderNotes();
+  try{const r=await ask.json('這是一張英文單字表的照片。請讀出每個英文單字（或片語）和中文意思。看不清楚的不要猜。只回覆 JSON：{"words":[{"w":"英文","m":"中文"}]}',{images:[f]});
+    const ws=(Array.isArray(r&&r.words)?r.words:[]).filter(x=>x&&x.w).slice(0,60);
+    drafts['vc-text']=(drafts['vc-text']?drafts['vc-text']+'\n':'')+ws.map(x=>`${String(x.w).trim()} ${String(x.m||'').trim()}`).join('\n');
+    toast(ws.length?`讀到 ${ws.length} 個單字，確認一下再按「做成單字卡」`:'看不出單字，換一張清楚一點的照片');
+  }catch(err){genError(err)}finally{vocabGen=false;renderNotes()}
+});
+$('panel-notes').addEventListener('input',e=>{if(['vc-title','vc-text'].includes(e.target.id)) drafts[e.target.id]=e.target.value});
 $('panel-notes').addEventListener('input',e=>{if(['g-unit','g-input','ge-input','g-grade'].includes(e.target.id)) drafts[e.target.id]=e.target.value});
 $('panel-notes').addEventListener('submit',async e=>{
   if(e.target.id==='gen-exam-form'){e.preventDefault();genExamNote();return}
+  if(e.target.id==='vocab-form'){e.preventDefault();
+    const title=$('vc-title').value.trim(), cards=parseVocab($('vc-text').value);
+    if(!title) return; if(cards.length<2){toast('至少要兩個單字，一行一個：英文 中文');return}
+    const en=main.subjects.find(x=>/英/.test(x.name)), id=uid('n');
+    notes[id]={type:'vocab',sid:en?en.id:'en',title,unit:'單字卡',cards,points:[],questions:vocabQuestions(cards),attempts:[],createdAt:new Date().toISOString(),publisher:en&&en.publisher||''};
+    delete drafts['vc-title']; delete drafts['vc-text']; saveNote(id); openNote=id; renderNotes(); toast(`做好 ${cards.length} 張單字卡了`); return}
   if(e.target.id!=='gen-form') return;
   e.preventDefault(); if(!ask||gen) return;
   const s=subj($('g-subj').value), unit=$('g-unit').value.trim(), input=$('g-input').value.trim();
@@ -1203,6 +1346,8 @@ function setFormDefaults(){
 /* ---------- parent ---------- */
 function renderParent(){
   renderRewardsAdmin(); renderExamScores();
+  const mm=main.message; $('msg-reply').innerHTML=mm&&mm.text?`<div class="bag" style="border-color:var(--line)"><span class="small muted">你上次說：</span><span>${esc(mm.text)}</span>
+    ${mm.reply?`<span><b>孩子回覆：</b>${esc(mm.reply.text)}</span>`:`<span class="small muted">${mm.read?'孩子已經看過了':'孩子還沒看到'}</span>`}</div>`:'';
   $('wk-text').textContent=weeklyText();
   const td=now().getDay(), mon=dateForDow(1); if(td===0) mon.setDate(mon.getDate()-7);
   let sumDone=0,sumTotal=0; const cols=[];
@@ -1213,7 +1358,8 @@ function renderParent(){
     if(!total){total=buildPlanFor(d).filter(x=>x.kind!=='break'&&x.kind!=='activity').length}
     if(!future){sumDone+=count;sumTotal+=total}
     const pct=total?Math.min(1,count/total):0;
-    cols.push(`<div class="wd${dk===todayKey()?' today':''}"><div class="col${future?' future':''}" title="${count}/${total}"><i style="height:${pct*100}%"></i></div><b>${WD[dow]}</b><span>${future?'—':count+'/'+total}</span></div>`);
+    const mo=p&&p.mood, moTxt={good:'不錯',ok:'普通',tired:'好累'}[mo]||'';
+    cols.push(`<div class="wd${dk===todayKey()?' today':''}"><div class="col${future?' future':''}" title="${count}/${total}"><i style="height:${pct*100}%"></i></div><b>${WD[dow]}</b><span>${future?'—':count+'/'+total}</span><span style="font-size:11px">${moTxt}</span></div>`);
   }
   $('parent-week').innerHTML=cols.join('');
   const ex=upcomingExams(todayKey()), nx=ex[0];
@@ -1231,6 +1377,7 @@ function renderParent(){
     return `<tr><td>${s?`<span class="subj" style="--h:${s.h}">${esc(s.name)}</span>`:''}</td><td>${esc(n.title||n.unit)}</td><td class="num">${a.length}</td><td class="num">${l.score}/${l.total}</td><td class="num">${best}/${l.total}</td></tr>`}).join('')}</tbody></table>`
     :'<p class="muted small">孩子還沒有做過練習題。</p>';
   $('sync-state').textContent=db?(synced?'和孩子的畫面即時同步':'正在連線……'):'只存在這台裝置上';
+  renderSync();
 }
 function buildPlanFor(d){const save=viewDow;const r=buildPlan(d.getDay());return r}
 $('msg-form').addEventListener('submit',e=>{
@@ -1330,7 +1477,7 @@ function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;clearTim
 function showTab(name){
   document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected',x.dataset.tab===name));
   ['plan','tt','notes','rem','parent'].forEach(p=>$('panel-'+p).hidden=p!==name);
-  if(name==='notes'){quiz=null;renderNotes()}
+  if(name==='notes'){if(!keepQuiz)quiz=null;keepQuiz=false;renderNotes()}
   if(name!=='parent'&&(unlocked||changingPw)){unlocked=false;changingPw=false;lockErr=''}
   if(name==='parent') renderLock();
 }
@@ -1339,8 +1486,221 @@ document.addEventListener('click',e=>{
   const g=e.target.closest('[data-goto]'); if(g){showTab(g.dataset.goto);return}
   const x=e.target.closest('[data-examnote]'); if(x){genMode='exam';genExam=x.dataset.examnote;openNote=null;practiceFilter='';showTab('notes');return}
   const o=e.target.closest('[data-opennote]'); if(o){openNote=o.dataset.opennote;showTab('notes');return}
-  if(e.target.closest('[data-wrongstart]')){showTab('notes');startWrongReview()}
+  if(e.target.closest('[data-wrongstart]')){showTab('notes');startWrongReview();return}
+  const ms=e.target.closest('[data-mockstart]'); if(ms){startMock(ms.dataset.mockstart)}
 });
+
+/* ---------- progress helper ---------- */
+function editProgress(dk,fn){
+  const p=progress[dk]?clone(progress[dk]):{date:dk,done:{}}; p.date=dk; fn(p);
+  const d=new Date(dk+'T12:00:00'), t2=buildPlanFor(d).filter(i=>i.kind!=='break'&&i.kind!=='activity');
+  progress[dk]=p; const t3=buildPlanFor(d).filter(i=>i.kind!=='break'&&i.kind!=='activity');
+  p.total=t3.length; p.count=t3.filter(i=>p.done[i.id]).length;
+  saveProgress(dk);
+}
+
+/* ---------- 7: mood ---------- */
+const MOODS=[['good','狀態不錯','happy'],['ok','普普通通','normal'],['tired','今天好累','sleep']];
+function moodHTML(dk){
+  const m=progress[dk]&&progress[dk].mood;
+  if(m&&!moodEdit){const x=MOODS.find(y=>y[0]===m)||MOODS[1];
+    return `<div class="mood"><div class="capy" style="width:46px">${capy(x[2])}</div><span>今天：<b>${x[1].replace('今天','')}</b>${m==='tired'?'，預習先跳過，作業和複習照常':''}</span><button class="go" id="mood-edit">改一下</button></div>`}
+  return `<div class="mood"><b style="font-family:var(--f-display);font-size:18px">今天感覺怎麼樣？</b><div class="row">${MOODS.map(x=>`<button class="mood-btn" data-mood="${x[0]}" aria-pressed="${m===x[0]}"><span class="capy">${capy(x[2])}</span>${x[1]}</button>`).join('')}</div></div>`;
+}
+let moodEdit=false;
+
+/* ---------- 4: contact book ---------- */
+let contactGen=false, contactPreview=null;
+function contactHTML(dk){
+  const c=(progress[dk]&&progress[dk].contact)||{hw:[],bring:[],notes:[]};
+  const pv=contactPreview;
+  return `<div class="contact">
+    <div class="row between"><div class="label">今天的聯絡簿</div>
+      ${ask&&imagesOK?`<label class="btn ghost" for="cb-photo" style="padding:4px 12px;cursor:pointer">${contactGen?'正在讀聯絡簿……':'拍聯絡簿'}</label><input type="file" id="cb-photo" accept="image/*" hidden ${contactGen?'disabled':''}>`:''}</div>
+    ${pv?`<div class="warnbox" style="display:flex;flex-direction:column;gap:6px"><b>讀到的內容，確認一下</b>
+      ${pv.hw.length?`<span>作業：${pv.hw.map(esc).join('、')}</span>`:''}${pv.bring.length?`<span>要帶：${pv.bring.map(esc).join('、')}</span>`:''}
+      ${pv.exams.length?`<span>考試：${pv.exams.map(e=>esc(`${e.subject} ${e.title} ${e.date||'（日期不明）'}`)).join('、')}</span>`:''}${pv.notes.length?`<span>其他：${pv.notes.map(esc).join('、')}</span>`:''}
+      <span class="row"><button class="btn primary" id="cb-apply" type="button">加進去</button><button class="btn ghost" id="cb-cancel" type="button">不對，取消</button></span></div>`:''}
+    ${c.hw.map((h,i)=>`<button class="chk${h.done?' on':''}" data-cbhw="${i}"><span class="box">${h.done?'✓':''}</span><span class="tx">${esc(h.t)}</span></button>`).join('')||'<span class="small muted">還沒有作業。可以拍聯絡簿，或在下面自己加。</span>'}
+    ${c.bring.length?`<span class="small"><b>要帶：</b>${c.bring.map(esc).join('、')}</span>`:''}
+    ${c.notes.length?`<span class="small muted">${c.notes.map(esc).join('・')}</span>`:''}
+    <div class="row"><input class="inline-input" id="cb-add" maxlength="40" placeholder="加一項作業，例如：數學習作 p.32" style="flex:1;min-width:150px"><button class="btn" id="cb-add-btn" type="button" style="padding:4px 12px">加入</button></div>
+  </div>`;
+}
+async function readContactBook(file){
+  if(!ask||contactGen) return; contactGen=true; renderPlan();
+  const n=now();
+  const prompt=`這是一張台灣${main.school.grade||'國中'}學生的聯絡簿照片。今天是 ${dkey(n)}（星期${WD[n.getDay()]}）。請讀出今天這一頁的內容。
+- homework：今天要寫的作業，每項一句，例如「數學習作 p.32–33」。
+- bring：明天要帶的東西。
+- exams：提到的考試，subject 用科目名稱，title 例如「小考」，date 換算成 YYYY-MM-DD（例如「下週三」要算出日期），算不出來就給空字串；scope 是範圍。
+- notes：其他老師交代的事（例如繳費、回條）。
+看不清楚的字不要猜。只回覆一個 JSON 物件：{"homework":[],"bring":[],"exams":[{"subject":"","title":"","date":"","scope":""}],"notes":[]}`;
+  try{
+    const r=await ask.json(prompt,{images:[file]});
+    const arr=a=>(Array.isArray(a)?a:[]).map(x=>String(x).trim()).filter(Boolean).slice(0,15);
+    contactPreview={hw:arr(r&&r.homework),bring:arr(r&&r.bring),notes:arr(r&&r.notes),
+      exams:(Array.isArray(r&&r.exams)?r.exams:[]).filter(e=>e&&e.title).slice(0,5).map(e=>({subject:String(e.subject||''),title:String(e.title),date:/^\d{4}-\d{2}-\d{2}$/.test(e.date||'')?e.date:'',scope:String(e.scope||'')}))};
+    if(!contactPreview.hw.length&&!contactPreview.bring.length&&!contactPreview.exams.length&&!contactPreview.notes.length){contactPreview=null;toast('看不出內容，換一張清楚一點的照片')}
+  }catch(err){genError(err)}finally{contactGen=false;renderPlan()}
+}
+function applyContact(){
+  const pv=contactPreview; if(!pv) return; contactPreview=null; const dk=todayKey();
+  editProgress(dk,p=>{const c=p.contact||{hw:[],bring:[],notes:[]};
+    pv.hw.forEach(t=>{if(!c.hw.some(h=>h.t===t)) c.hw.push({t,done:false})});
+    c.bring=uniq([...c.bring,...pv.bring]); c.notes=uniq([...c.notes,...pv.notes]); p.contact=c});
+  let added=0;
+  pv.exams.forEach(e=>{ if(!e.date) return; const s=matchSubject(e.subject); if(!s) return;
+    if(main.exams.some(x=>x.sid===s.id&&x.date===e.date)) return;
+    main.exams.push({id:uid('e'),sid:s.id,title:e.title.slice(0,20),date:e.date,scope:e.scope.slice(0,40)}); added++});
+  if(added) saveMain(); else renderPlan();
+  toast(added?`加好了，也新增了 ${added} 場考試`:'聯絡簿加好了');
+}
+
+/* ---------- 8: closet ---------- */
+const CLOSET=[['towel','溫泉小毛巾',25],['flower','小花',25],['bow','蝴蝶結',30],['glasses','圓眼鏡',40],['hat','草帽',60]];
+function accSVG(){
+  const k=(typeof main!=='undefined'&&main.closet&&main.closet.wearing)||'', L='var(--capy-line)';
+  if(k==='bow') return `<g transform="translate(86 23)"><path d="M0 0l-10-7v14zM0 0l10-7v14z" fill="#FF7FA8" stroke="${L}" stroke-width="1.8" stroke-linejoin="round"/><circle r="3.2" fill="#FF7FA8" stroke="${L}" stroke-width="1.8"/></g>`;
+  if(k==='glasses') return `<circle cx="57" cy="45" r="7.5" fill="#fff" fill-opacity=".25" stroke="${L}" stroke-width="2.4"/><path d="M49.5 45.5l-6 1" stroke="${L}" stroke-width="2.4" stroke-linecap="round"/><path d="M64.5 44l8-3" stroke="${L}" stroke-width="2.4" stroke-linecap="round"/>`;
+  if(k==='flower') return `<g transform="translate(76 22)">${[0,72,144,216,288].map(a=>`<circle cx="${(5*Math.cos(a*Math.PI/180)).toFixed(1)}" cy="${(5*Math.sin(a*Math.PI/180)).toFixed(1)}" r="3.6" fill="#FFB3C7" stroke="${L}" stroke-width="1.2"/>`).join('')}<circle r="2.8" fill="var(--sun)" stroke="${L}" stroke-width="1.2"/></g>`;
+  if(k==='towel') return `<g transform="translate(60 14) rotate(-6)"><rect x="-13" y="0" width="26" height="9" rx="2.5" fill="#fff" stroke="${L}" stroke-width="2"/><path d="M-13 4.5h26" stroke="#7FC8E8" stroke-width="2.2"/></g>`;
+  if(k==='hat') return `<ellipse cx="44" cy="20" rx="20" ry="5" fill="#F2D27A" stroke="${L}" stroke-width="2.2"/><path d="M33 20q0-14 11-14t11 14z" fill="#F2D27A" stroke="${L}" stroke-width="2.2" stroke-linejoin="round"/><path d="M33.5 16h21" stroke="#E0584F" stroke-width="3"/>`;
+  return '';
+}
+function closetHTML(){
+  const c=main.closet||{owned:[],wearing:''}, bal=yuzuBalance();
+  return `<div><div class="label" style="margin-bottom:6px">豚豚衣櫃</div><div class="closet">${CLOSET.map(([k,name,cost])=>{
+    const own=(c.owned||[]).includes(k), wear=c.wearing===k;
+    const prev=main.closet; main.closet={...c,wearing:k}; const img=capy('normal'); main.closet=prev;
+    return `<div class="cl-item${wear?' wearing':''}"><span class="capy">${img}</span><span>${name}</span>
+      ${own?`<button class="btn ${wear?'primary':'ghost'}" data-wear="${k}" style="padding:2px 10px">${wear?'脫下':'穿上'}</button>`
+        :`<button class="btn ${bal>=cost?'sun':'ghost'}" data-buy="${k}" style="padding:2px 10px" ${readOnly?'disabled':''}><span class="cost">${buyArmed===k?'確定買？':yuzu(14)+' '+cost}</span></button>`}</div>`}).join('')}</div></div>`;
+}
+let buyArmed=null;
+
+/* ---------- 1: calendar export ---------- */
+function icsEsc(t){return String(t||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n')}
+function icsText(){
+  const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//kid-study-planner//ZH-TW','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:小書包讀書計劃'];
+  const stamp=new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z';
+  const dt=(dk,hm)=>dk.replace(/-/g,'')+'T'+String(hm).replace(':','')+'00';
+  const alarm=(trig,desc)=>['BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsEsc(desc),'TRIGGER:'+trig,'END:VALARM'];
+  const ev=(id,props)=>{L.push('BEGIN:VEVENT','UID:'+id+'@kid-study-planner','DTSTAMP:'+stamp,...props,'END:VEVENT')};
+  const BY=['SU','MO','TU','WE','TH','FR','SA'], tk=todayKey();
+  const firstOn=days=>{for(let i=0;i<8;i++){const d=new Date(tk+'T12:00:00');d.setDate(d.getDate()+i);if(days.includes(d.getDay()))return dkey(d)}return tk};
+  const st=main.settings.start||'18:30', stEnd=fmt(toMin(st)+30);
+  ev('study-start',['DTSTART:'+dt(firstOn([1,2,3,4,5]),st),'DTEND:'+dt(firstOn([1,2,3,4,5]),stEnd),'RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR','SUMMARY:'+icsEsc('📚 開始讀書（打開小書包看今天的計劃）'),...alarm('PT0M','開始讀書囉')]);
+  const bed=main.settings.bedtime||'22:30';
+  ev('bedtime',['DTSTART:'+dt(firstOn([0,1,2,3,4,5,6]),fmt(toMin(bed)-15)),'DTEND:'+dt(firstOn([0,1,2,3,4,5,6]),bed),'RRULE:FREQ=DAILY','SUMMARY:'+icsEsc('🌙 準備收書包、睡覺'),...alarm('PT0M','15 分鐘後該休息了')]);
+  (main.activities||[]).forEach(a=>{ if(!(a.days||[]).length) return; const f=firstOn(a.days);
+    ev('act-'+a.id,['DTSTART:'+dt(f,a.start),'DTEND:'+dt(f,a.end),'RRULE:FREQ=WEEKLY;BYDAY='+a.days.map(d=>BY[d]).join(','),'SUMMARY:'+icsEsc(a.name),...alarm('-PT15M','15 分鐘後'+a.name)])});
+  main.exams.filter(e=>e.date>=tk).forEach(e=>{const s=subj(e.sid), nd=addDays(e.date,1);
+    ev('exam-'+e.id,['DTSTART;VALUE=DATE:'+e.date.replace(/-/g,''),'DTEND;VALUE=DATE:'+nd.replace(/-/g,''),'SUMMARY:'+icsEsc(`📝 ${s?s.name:''} ${e.title}`),'DESCRIPTION:'+icsEsc(e.scope?'範圍：'+e.scope:''),
+      ...alarm('-PT5H',`明天要考 ${s?s.name:''} ${e.title}，早點睡`),...alarm('PT7H',`今天考 ${s?s.name:''}，加油！`)])});
+  main.reminders.filter(r=>r.date>=tk).forEach(r=>ev('rem-'+r.id,['DTSTART:'+dt(r.date,r.time),'DTEND:'+dt(r.date,fmt(toMin(r.time)+15)),'SUMMARY:'+icsEsc('🔔 '+r.text),...alarm('PT0M',r.text)]));
+  const cd=capDate(); if(cd&&cd>=tk) ev('cap',['DTSTART;VALUE=DATE:'+cd.replace(/-/g,''),'DTEND;VALUE=DATE:'+addDays(cd,2).replace(/-/g,''),'SUMMARY:'+icsEsc('國中教育會考'+(main.settings.capDate?'':'（預估日期）'))]);
+  L.push('END:VCALENDAR'); return L.join('\r\n');
+}
+$('ics-btn').addEventListener('click',async()=>{
+  const text=icsText(), name='kid-planner.ics';
+  try{
+    if(dl){await dl.save({filename:name,data:new Blob([text],{type:'text/calendar'})});toast('存好了，打開檔案就能加到行事曆');return}
+    const a=document.createElement('a'); a.href='data:text/calendar;charset=utf-8,'+encodeURIComponent(text); a.download=name;
+    document.body.append(a); a.click(); a.remove(); toast('照畫面指示按「加入全部」就好');
+  }catch(e){ if(e&&e.code==='cancelled') return; toast('沒辦法匯出，請用 Safari 打開網站再試') }
+});
+
+/* ---------- 2: math generator (國二上) ---------- */
+const RI=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const PICK=a=>a[Math.floor(Math.random()*a.length)];
+function mc(right,wrongs,q,explain){
+  const opts=[String(right)]; for(const w of wrongs){const t=String(w); if(!opts.includes(t)&&opts.length<4) opts.push(t)}
+  let k=1; while(opts.length<4){const t=String(right)+'＋'+k++; if(!opts.includes(t)) opts.push(t)}
+  for(let i=opts.length-1;i>0;i--){const j=RI(0,i);[opts[i],opts[j]]=[opts[j],opts[i]]}
+  return {q,options:opts,answer:opts.indexOf(String(right)),explain};
+}
+function poly(cs){ // [a,b,c] → ax² + bx + c
+  const names=['x²','x',''], parts=[];
+  cs.forEach((c,i)=>{ if(!c) return; const abs=Math.abs(c), coef=(abs===1&&names[i])?'':String(abs);
+    parts.push({neg:c<0,t:coef+names[i]}) });
+  if(!parts.length) return '0';
+  return parts.map((p,i)=>i===0?(p.neg?'−':'')+p.t:(p.neg?' − ':' + ')+p.t).join('');
+}
+const sgn=n=>n<0?`− ${-n}`:`+ ${n}`;
+const MATH_UNITS=[
+  {id:'mf',name:'乘法公式',gen(){
+    const t=RI(0,2);
+    if(t===0){const k=PICK([-4,-3,-2,-1,1,2,3,4]), n=100+k;
+      return mc(n*n,[10000+200*k,10000+k*k,n*n+10],`用乘法公式算 ${n}² = ?`,`${n}² = (100 ${sgn(k)})² = 10000 ${sgn(200*k)} + ${k*k} = ${n*n}`)}
+    if(t===1){const k=RI(1,6), a=50+k, b=50-k;
+      return mc(2500-k*k,[2500+k*k,2500-2*k,2500-k],`用乘法公式算 ${a} × ${b} = ?`,`(50+${k})(50−${k}) = 50² − ${k}² = ${2500-k*k}`)}
+    const m=PICK([-6,-5,-4,-3,-2,2,3,4,5,6]);
+    return mc(poly([1,2*m,m*m]),[poly([1,0,m*m]),poly([1,m,m*m]),poly([1,2*m,-m*m])],`展開 (x ${sgn(m)})² = ?`,`(a+b)² = a² + 2ab + b²，所以是 ${poly([1,2*m,m*m])}`)}},
+  {id:'poly',name:'多項式乘法',gen(){
+    const a=RI(1,3), b=PICK([-5,-4,-3,-2,-1,1,2,3,4,5]), c=RI(1,3), d=PICK([-5,-4,-3,-2,-1,1,2,3,4,5]);
+    const right=poly([a*c,a*d+b*c,b*d]);
+    return mc(right,[poly([a*c,a*d,b*d]),poly([a*c,a*d+b*c,-b*d]),poly([a*c,-(a*d+b*c),b*d])],
+      `展開 (${poly([0,a,b])})(${poly([0,c,d])}) = ?`,`用分配律：x² 項 ${a}×${c}，x 項 ${a}×(${d}) + (${b})×${c}，常數 (${b})×(${d})，整理後是 ${right}`)}},
+  {id:'sqrt',name:'平方根',gen(){
+    if(Math.random()<.5){const k=RI(2,6), m=PICK([2,3,5,6,7]);
+      return mc(`${k}√${m}`,[`${m}√${k}`,`${k*k}√${m}`,`${k}√${m*2}`],`化簡 √${k*k*m} = ?`,`${k*k*m} = ${k*k} × ${m}，所以 √${k*k*m} = ${k}√${m}`)}
+    const n=RI(2,99), lo=Math.floor(Math.sqrt(n)); if(lo*lo===n) return MATH_UNITS[2].gen();
+    return mc(`${lo} 和 ${lo+1} 之間`,[`${lo-1} 和 ${lo} 之間`,`${lo+1} 和 ${lo+2} 之間`,`${Math.floor(n/2)} 和 ${Math.floor(n/2)+1} 之間`],`√${n} 介於哪兩個連續整數之間？`,`${lo}² = ${lo*lo}，${lo+1}² = ${(lo+1)*(lo+1)}，${n} 在中間`)}},
+  {id:'pyth',name:'畢氏定理',gen(){
+    const [a,b,c]=PICK([[3,4,5],[5,12,13],[8,15,17],[7,24,25],[6,8,10],[9,12,15],[20,21,29],[12,16,20]]);
+    if(Math.random()<.5) return mc(c,[a+b,c+1,Math.round(Math.sqrt(a*a+b*b)/2)||c-1],`直角三角形兩股是 ${a} 和 ${b}，斜邊是多少？`,`斜邊² = ${a}² + ${b}² = ${a*a+b*b}，所以斜邊是 ${c}`);
+    return mc(b,[c-a,a,b+1],`直角三角形斜邊是 ${c}，一股是 ${a}，另一股是多少？`,`另一股² = ${c}² − ${a}² = ${c*c-a*a}，所以是 ${b}`)}},
+  {id:'fact',name:'因式分解',gen(){
+    let p=PICK([-6,-5,-4,-3,-2,-1,1,2,3,4,5,6]), q=PICK([-6,-5,-4,-3,-2,-1,1,2,3,4,5,6]); if(p+q===0) q=q+1||2;
+    const f=(x,y)=>`(x ${sgn(x)})(x ${sgn(y)})`;
+    return mc(f(p,q),[f(-p,-q),f(p,-q),f(-p,q)],`因式分解 ${poly([1,p+q,p*q])} = ?`,`找兩個數相乘 ${p*q}、相加 ${p+q}：${p} 和 ${q}`)}},
+  {id:'quad',name:'一元二次方程式',gen(){
+    let p=RI(-6,6), q=RI(-6,6); if(p===q) q=p+1;
+    const r=(x,y)=>`x = ${Math.min(x,y)} 或 x = ${Math.max(x,y)}`;
+    return mc(r(p,q),[r(-p,-q),r(p,-q),r(-p,q)],`解 ${poly([1,-(p+q),p*q])} = 0`,`因式分解成 (x ${sgn(-p)})(x ${sgn(-q)}) = 0，所以 x = ${p} 或 ${q}`)}}
+];
+function mathSid(){const s=main.subjects.find(x=>x.name==='數學'); return s?s.id:'math'}
+function startMathGen(uid_){
+  const u=MATH_UNITS.find(x=>x.id===uid_); if(!u) return;
+  if(!notes.mathgen){notes.mathgen={sid:mathSid(),title:'數學自動練習',unit:'自動出題（錯題會留在這裡）',points:['這裡收的是自動出題時答錯的題目，會一起進錯題本。'],questions:[],attempts:[],createdAt:new Date().toISOString(),auto:true}; saveNote('mathgen')}
+  quiz={genUnit:u.id,nid0:'mathgen',items:[...Array(10)].map(()=>({gen:true,q:u.gen()})),i:0,score:0,cleared:0,picked:null,title:u.name};
+  openNote=null; renderNotes();
+}
+
+/* ---------- 5: vocabulary ---------- */
+function parseVocab(text){
+  return text.split(/\n+/).map(l=>l.trim()).filter(Boolean).map(l=>{
+    let m=l.match(/^([^㐀-鿿（（]+?)[\s:：=\-–—,，、]*([㐀-鿿（（].*)$/);
+    if(!m) m=l.match(/^(.+?)\s*[\t:：=]\s*(.+)$/);
+    if(!m) return null; const w=m[1].trim().replace(/[\s:：=\-–—,，、]+$/,''); return /[A-Za-z]/.test(w)?{w,m:m[2].trim()}:null;
+  }).filter(Boolean).slice(0,60);
+}
+function vocabQuestions(cards){
+  if(cards.length<4) return [];
+  return cards.map((c,i)=>{const others=cards.filter((_,j)=>j!==i);
+    const pickN=(arr,n)=>arr.slice().sort(()=>Math.random()-.5).slice(0,n);
+    return i%2===0?mc(c.w,pickN(others,3).map(o=>o.w),`「${c.m}」的英文是哪一個？`,`${c.w}：${c.m}`)
+      :mc(c.m,pickN(others,3).map(o=>o.m),`${c.w} 是什麼意思？`,`${c.w}：${c.m}`)});
+}
+function speak(w){
+  try{const u=new SpeechSynthesisUtterance(w);u.lang='en-US';u.rate=.85;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){toast('這台裝置不能播放發音')}
+}
+let flash=null, spell=null, vocabGen=false;
+
+/* ---------- 6: mock exam ---------- */
+function mockCandidates(){
+  return upcomingExams(todayKey()).filter(e=>e.days<=7&&subj(e.sid)).map(e=>{
+    const items=noteList().filter(n=>n.sid===e.sid&&!n.auto).flatMap(n=>(n.questions||[]).map((_,qi)=>({nid:n.id,qi})));
+    return {e,items};
+  }).filter(x=>x.items.length>=5);
+}
+function startMock(examId){
+  const c=mockCandidates().find(x=>x.e.id===examId); if(!c) return;
+  const items=c.items.slice().sort(()=>Math.random()-.5).slice(0,20), mins=Math.max(5,Math.round(items.length*1.2));
+  quiz={mock:{eid:c.e.id,sid:c.e.sid,endAt:Date.now()+mins*60000,mins},items,i:0,score:0,cleared:0,picked:null};
+  openNote=null; keepQuiz=true; showTab('notes');
+}
 
 /* ---------- 會考 & 國一複習 ---------- */
 function capDate(){
@@ -1473,6 +1833,7 @@ function weeklyText(){
     `完成率：${total?Math.round(done/total*100):0}%（${done}/${total} 項）`,
     `專注時間：${focusMin} 分鐘${leaves?`，中途離開畫面 ${leaves} 次`:''}`,
     `練習題：${atts.length?`做了 ${atts.length} 次，平均答對 ${Math.round(accAll/Math.max(1,accTot)*100)}%`:'這週還沒練習'}；錯題本還有 ${wrongList().length} 題`,
+    `心情：${(()=>{const c={good:0,ok:0,tired:0};past.forEach(k=>{const m=progress[k]&&progress[k].mood;if(m)c[m]++});return c.good+c.ok+c.tired?`不錯 ${c.good} 天、普通 ${c.ok} 天、好累 ${c.tired} 天`:'這週沒有打卡'})()}`,
     `自己調整：${past.reduce((a,k)=>a+Object.keys((progress[k]&&progress[k].moved)||{}).length,0)} 項改到週末`,
     `柚子：這週賺了 ${weekYuzu} 顆，現在有 ${yuzuBalance()} 顆`];
   if(scored.length) lines.push('這週成績：'+scored.map(e=>`${subj(e.sid)?.name||''}${e.title} ${e.score} 分`).join('、'));
@@ -1480,6 +1841,7 @@ function weeklyText(){
   const tips=[];
   if(low&&low.r<0.6){const d=new Date(low.k+'T12:00:00'); const busy=(main.activities||[]).some(a=>(a.days||[]).includes(d.getDay()));
     tips.push(`星期${WD[d.getDay()]}完成得最少${busy?'（那天有補習）':''}，可以把那天的預習移到週末。`)}
+  if(past.filter(k=>progress[k]&&progress[k].mood==='tired').length>=3) tips.push('這週有三天以上說好累，可以問問她最近睡得夠不夠、課業會不會太重。');
   if(weak.length) tips.push(`${weak.join('、')}的練習答對率不到六成，可以先看重點再做錯題複習。`);
   if(ex[0]&&ex[0].days<=7&&!noteForExam(ex[0].id)) tips.push(`${subj(ex[0].sid)?.name||''}${ex[0].title}快到了，可以先用「依段考範圍整理」整理重點。`);
   if(!tips.length) tips.push(total&&done/total>=0.8?'這週表現很穩定，記得多稱讚她！':'先從每天完成一半開始，慢慢加上去就好。');
@@ -1528,11 +1890,11 @@ function renderExamScores(){
 /* ---------- yuzu points ---------- */
 const yuzu=(n=22)=>`<svg width="${n}" height="${n}" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13.5" r="9" fill="var(--sun)"/><circle cx="9" cy="11" r="2" fill="#fff" opacity=".35"/><path d="M12 5q4-5 9-2q-4 4-9 2z" fill="var(--leaf)"/></svg>`;
 function yuzuEarned(){
-  let n=0; Object.values(progress).forEach(p=>{n+=+(p&&p.count)||0});
+  let n=0; Object.values(progress).forEach(p=>{n+=+(p&&p.count)||0; ((p&&p.mocks)||[]).forEach(m=>{n+=+m.score||0}); ((p&&p.contact&&p.contact.hw)||[]).forEach(h=>{if(h.done)n+=1})});
   Object.values(notes).forEach(x=>{(x.attempts||[]).forEach(a=>{n+=+a.score||0}); n+=(+x.reviewOk||0)+(+x.cleared||0)*2});
   return n;
 }
-function yuzuSpent(){return main.redemptions.filter(r=>r.status!=='returned').reduce((a,r)=>a+(+r.cost||0),0)}
+function yuzuSpent(){const own=(main.closet&&main.closet.owned)||[]; return main.redemptions.filter(r=>r.status!=='returned').reduce((a,r)=>a+(+r.cost||0),0)+CLOSET.filter(c=>own.includes(c[0])).reduce((a,c)=>a+c[2],0)}
 function yuzuBalance(){return Math.max(0,yuzuEarned()-yuzuSpent())}
 let redeemArmed=null;
 function shopHTML(){
@@ -1544,6 +1906,7 @@ function shopHTML(){
       <button class="btn ${bal>=r.cost?'sun':'ghost'}" data-redeem="${r.id}" ${readOnly?'disabled':''} style="padding:4px 10px"><span class="cost">${redeemArmed===r.id?'確定兌換？':yuzu(16)+' '+r.cost}</span></button></div>`).join('')}</div>`
       :'<span class="small muted">還沒有獎勵可以換。請爸媽在「家長」分頁設定。</span>'}
     ${pend.length?`<span class="small">等爸媽兌現：${pend.map(r=>esc(r.name)).join('、')}</span>`:''}
+    ${closetHTML()}
   </div>`;
 }
 function renderRewardsAdmin(){
@@ -1634,7 +1997,8 @@ let auth=null, authLoaded=false, unlocked=false, isOwner=false, lockErr='', chan
 const LAUTH='kid-study-planner-auth';
 async function sha(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
 function loadLocalAuth(){try{auth=JSON.parse(localStorage.getItem(LAUTH))}catch(e){auth=null}authLoaded=true}
-const canSetAuth=()=>db?isOwner:true;
+const canSetAuth=()=>db&&!fbMode?isOwner:true;
+let fbMode=false;
 function renderLock(){
   const L=$('parent-lock'), C=$('parent-content');
   $('pw-change').hidden=!canSetAuth();
@@ -1700,8 +2064,8 @@ function capy(mood,spa){
     <circle cx="27" cy="51" r="2" fill="${L}"/><circle cx="37" cy="51" r="2" fill="${L}"/>
     <path d="M32 55.5v8.5M32 64l-5 5M32 64l5 5" fill="none" stroke="${L}" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
     <ellipse cx="62" cy="56" rx="5.5" ry="3.2" fill="var(--blush)" opacity=".75"/>
-    <circle cx="40" cy="17" r="8.5" fill="var(--sun)" stroke="${L}" stroke-width="2.4"/><path d="M40 9q6-6 12-2q-5 5-12 2z" fill="var(--leaf)" stroke="${L}" stroke-width="1.6" stroke-linejoin="round"/>
-    ${extra}${water}</svg>`;
+    ${typeof accSVG==='function'&&typeof main!=='undefined'&&main.closet&&main.closet.wearing==='hat'?'':`<circle cx="40" cy="17" r="8.5" fill="var(--sun)" stroke="${L}" stroke-width="2.4"/><path d="M40 9q6-6 12-2q-5 5-12 2z" fill="var(--leaf)" stroke="${L}" stroke-width="1.6" stroke-linejoin="round"/>`}
+    ${typeof accSVG==='function'?accSVG():''}${extra}${water}</svg>`;
 }
 const CAPY_LINES=['慢慢來也沒關係，一起加油！','每完成一項，我就往溫泉走一步 ♨','累了就休息一下，喝口水吧','頭上的柚子香香的～','考試前一週，我會幫你多排複習','不會的題目先做記號，明天問老師','寫完作業再積木、滑手機比較安心喔'];
 let capyLine=-1;
@@ -1710,11 +2074,75 @@ function capySay(){
   capyLine=i; $('capy-say').textContent=CAPY_LINES[i];
 }
 $('mascot').innerHTML=capy('normal');
+setTimeout(()=>{$('mascot').innerHTML=capy('normal')},0);
 $('al-capy').innerHTML=capy('alert');
 $('capy-say').textContent='我是豚豚，今天也慢慢來！';
 $('mascot').addEventListener('click',()=>{
   const m=$('mascot'); m.classList.remove('hop'); void m.offsetWidth; m.classList.add('hop');
   m.innerHTML=capy('happy'); setTimeout(()=>{m.innerHTML=capy('normal')},900); capySay();
+});
+
+/* ---------- 3: Firebase family sync ---------- */
+const LFB='kid-study-planner-sync';
+let fbStatus='';
+function fbLoad(){try{return JSON.parse(localStorage.getItem(LFB))}catch(e){return null}}
+function fbSave(v){try{v?localStorage.setItem(LFB,JSON.stringify(v)):localStorage.removeItem(LFB)}catch(e){}}
+function parseFbInput(t){
+  t=String(t||'').trim();
+  if(t.startsWith('KP1:')){try{const o=JSON.parse(decodeURIComponent(escape(atob(t.slice(4)))));if(o&&o.config&&o.family)return o}catch(e){} return null}
+  const cfg={}; t.replace(/(\w+)\s*:\s*["']([^"']+)["']/g,(m,k,v)=>{cfg[k]=v;return m});
+  return cfg.apiKey&&cfg.projectId?{config:cfg}:null;
+}
+function shareCode(o){return 'KP1:'+btoa(unescape(encodeURIComponent(JSON.stringify({config:o.config,family:o.family}))))}
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('load '+src));document.head.append(s)})}
+async function fbConnect(o){
+  if(!window.firebase){await loadScript('vendor/firebase-app-compat.js');await loadScript('vendor/firebase-auth-compat.js');await loadScript('vendor/firebase-firestore-compat.js')}
+  const app=firebase.apps.length?firebase.app():firebase.initializeApp(o.config);
+  await firebase.auth().signInAnonymously();
+  const fs=firebase.firestore(), root='families/'+o.family+'/';
+  return {doc:p=>fs.doc(root+p),collection:p=>fs.collection(root+p)};
+}
+function renderSync(){
+  const sec=$('sync-sec'); if(!sec) return;
+  sec.hidden=!document.querySelector('link[rel="manifest"]'); if(sec.hidden) return;
+  const o=fbLoad();
+  $('sync-body').innerHTML=o&&o.family?`<div class="note">${db?'已經在同步。':'正在連線……'}${fbStatus?' '+esc(fbStatus):''}</div>
+      <div class="field"><label for="fb-share">把這段「同步碼」傳給爸媽，貼到爸媽手機上的這一格就能看到一樣的資料</label><textarea id="fb-share" readonly style="min-height:70px">${esc(shareCode(o))}</textarea></div>
+      <div class="row"><button class="btn" id="fb-copy" type="button">複製同步碼</button><button class="btn ghost" id="fb-stop" type="button">${fbStopArmed?'再按一次停止同步':'停止同步'}</button></div>`
+    :`<ol class="small" style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px">
+        <li>用電腦打開 console.firebase.google.com，新增一個專案（免費方案就夠）。</li>
+        <li>在專案裡新增「網頁應用程式」，複製畫面上 <code>firebaseConfig</code> 那一段。</li>
+        <li>到 Authentication → 登入方式，開啟「匿名」。</li>
+        <li>到 Firestore Database 建立資料庫，在「規則」貼上：<code>rules_version='2'; service cloud.firestore { match /databases/{db}/documents { match /families/{f}/{doc=**} { allow read, write: if request.auth != null; } } }</code></li>
+        <li>把 firebaseConfig 貼在下面，按「開始同步」。爸媽的手機則貼孩子手機上的「同步碼」。</li></ol>
+      <div class="field"><label for="fb-in">貼上 firebaseConfig 或同步碼</label><textarea id="fb-in" style="min-height:90px" placeholder="apiKey: &quot;AIza...&quot;, projectId: &quot;...&quot; ……或 KP1:……"></textarea></div>
+      <div><button class="btn primary" id="fb-start" type="button">開始同步</button></div>${fbStatus?`<div class="warnbox">${esc(fbStatus)}</div>`:''}`;
+}
+let fbStopArmed=false;
+async function startSync(o,first){
+  fbStatus=''; renderSync();
+  try{
+    const d=await fbConnect(o);
+    if(first){
+      const remote=await d.doc('planner/main').get();
+      if(!remote.exists){ await d.doc('planner/main').set(clone(main));
+        for(const k of Object.keys(progress)) await d.doc('progress/'+k).set(clone(progress[k]));
+        for(const k of Object.keys(notes)) await d.doc('notes/'+k).set(clone(notes[k]));
+        const a=fbLocalAuth(); if(a) await d.doc('parentlock/auth').set(a);
+        toast('上傳好了，現在開始同步');
+      } else toast('雲端已經有資料，改用雲端的資料');
+    }
+    connectStore(d,true); renderSync(); renderBackupHint();
+  }catch(e){ fbStatus='連不上：'+((e&&e.message)||'請檢查設定和網路'); db=null; renderSync() }
+}
+function fbLocalAuth(){try{return JSON.parse(localStorage.getItem(LAUTH))}catch(e){return null}}
+$('sync-body').addEventListener('click',e=>{
+  if(e.target.id==='fb-start'){const o=parseFbInput($('fb-in').value); if(!o){fbStatus='看不懂貼上的內容。要包含 apiKey 和 projectId，或是 KP1: 開頭的同步碼。';renderSync();return}
+    if(!o.family) o.family=(crypto.randomUUID?crypto.randomUUID():uid('f')+uid('g')).replace(/[^a-zA-Z0-9]/g,'');
+    fbSave(o); startSync(o,true); return}
+  if(e.target.id==='fb-copy'){const t=$('fb-share').value; navigator.clipboard.writeText(t).then(()=>toast('同步碼複製好了，用 LINE 傳給爸媽')).catch(()=>{$('fb-share').select();toast('已選好，按「拷貝」')});return}
+  if(e.target.id==='fb-stop'){ if(!fbStopArmed){fbStopArmed=true;renderSync();setTimeout(()=>{fbStopArmed=false;renderSync()},3000);return}
+    fbStopArmed=false; fbSave(null); toast('停止同步了，重新打開網站後生效'); setTimeout(()=>location.reload(),800)}
 });
 
 /* ---------- render ---------- */
@@ -1725,14 +2153,29 @@ function renderHeader(){
   $('example-banner').hidden=!main.isExample;
   ['start','hw','review','preview','bedtime'].forEach(k=>setVal('set-'+k,main.settings[k]));
 }
-function renderAll(){renderHeader();renderPlan();renderTT();if(!quiz)renderNotes();renderRem();renderParent()}
+function renderAll(){renderHeader();renderPlan();renderTT();if(!quiz&&!flash&&!spell)renderNotes();renderRem();renderParent()}
 
 setFormDefaults(); renderAll(); tick(); renderLock();
 
 /* ---------- connect shared storage and Claude when the viewer offers them ---------- */
 if(window.claude&&window.claude.use){
   window.claude.use('db').then(d=>{
-    if(!d){loadLocalAuth();renderLock();return} db=d;
+    if(!d){loadLocalAuth();renderLock();return} connectStore(d,false);
+  }).catch(()=>{});
+  window.claude.use('sample').then(async s=>{
+    if(!s) return; ask=s;
+    try{const l=await s.limits(); imagesOK=!!(l&&l.images)}catch(e){}
+    if(!quiz) renderNotes();
+    renderTTPhoto(); renderPlan();
+  }).catch(()=>{});
+  window.claude.use('downloads').then(d=>{dl=d||null}).catch(()=>{});
+  window.claude.use('user').then(async u=>{isOwner=u?await u.isOwner().catch(()=>false):false;renderLock()}).catch(()=>{});
+}else{
+  loadLocalAuth(); renderLock(); renderSync();
+  const o=fbLoad(); if(o&&o.family) startSync(o,false);
+}
+function connectStore(d,isFb){
+    db=d; fbMode=!!isFb;
     db.doc('parentlock/auth').onSnapshot(s=>{
       const was=JSON.stringify(auth);
       if(s.exists) auth=s.data(); else if(!s.metadata.fromCache) auth=null; else return;
@@ -1750,18 +2193,9 @@ if(window.claude&&window.claude.use){
     },err);
     db.collection('notes').onSnapshot(q=>{
       const n={}; q.docs.forEach(x=>{n[x.id]=pending('notes/'+x.id)?notes[x.id]:x.data()}); notes=n;
-      persistLocal(); if(openNote&&!notes[openNote]) openNote=null; if(!quiz) renderNotes(); renderPlan(); renderParent();
+      persistLocal(); if(openNote&&!notes[openNote]) openNote=null; if(!quiz&&!flash&&!spell) renderNotes(); renderPlan(); renderParent();
     },err);
-  }).catch(()=>{});
-  window.claude.use('sample').then(async s=>{
-    if(!s) return; ask=s;
-    try{const l=await s.limits(); imagesOK=!!(l&&l.images)}catch(e){}
-    if(!quiz) renderNotes();
-    renderTTPhoto();
-  }).catch(()=>{});
-  window.claude.use('downloads').then(d=>{dl=d||null}).catch(()=>{});
-  window.claude.use('user').then(async u=>{isOwner=u?await u.isOwner().catch(()=>false):false;renderLock()}).catch(()=>{});
-}else{loadLocalAuth();renderLock()}
+}
 })();
 </script>
 

@@ -106,6 +106,27 @@ header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:1
 .reply-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .mini{display:inline-block;width:30px;flex:none;margin:-4px 0}
 .mini svg{display:block;width:100%;height:auto}
+.ic{display:inline-block;width:28px;vertical-align:middle;flex:none;line-height:0}
+.ic svg{display:block;width:100%;height:auto}
+.ic.tab-ic{width:24px;margin:-8px 4px -6px -6px}
+h2 .ic,h3 .ic{width:36px;margin:-10px 6px -6px 0}
+.label .ic{width:24px;margin:-6px 4px -4px 0}
+.ic.lg{width:46px}
+.panel{position:relative}
+.peek{position:absolute;top:-34px;right:18px;width:58px;pointer-events:none;animation:bob 3.2s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.tab:hover .ic,.ncard:hover .ic,.stat:hover .ic{animation:wobble .6s}
+@keyframes wobble{25%{transform:rotate(-10deg)}75%{transform:rotate(10deg)}}
+.toast{display:flex;align-items:center;gap:8px;justify-content:center}
+.toast .ic{width:28px;margin:-6px 0}
+.stat{position:relative}
+.stat .ic{position:absolute;right:8px;top:8px;width:34px}
+.ncard{position:relative}
+.ncard .ic{position:absolute;right:8px;bottom:8px;width:34px;opacity:.95}
+.think-bob{width:46px;animation:bob 1.2s ease-in-out infinite}
+.confetti{position:fixed;top:-40px;width:28px;z-index:70;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(115vh) rotate(540deg)}}
+@media (prefers-reduced-motion:reduce){.peek,.think-bob,.tab:hover .ic,.ncard:hover .ic{animation:none}.confetti{display:none}}
 .hero{display:flex;gap:12px;align-items:flex-end;min-width:0}
 .hero .hello{min-width:0}
 .mascot{width:100px;flex:none;cursor:pointer;background:none;border:0;padding:0}
@@ -334,19 +355,20 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
   </div>
 
   <nav class="tabs" role="tablist">
-    <button class="tab" role="tab" aria-selected="true" data-tab="plan">今日計劃</button>
-    <button class="tab" role="tab" aria-selected="false" data-tab="tt">課表與課本</button>
-    <button class="tab" role="tab" aria-selected="false" data-tab="notes">重點練習</button>
-    <button class="tab" role="tab" aria-selected="false" data-tab="rem">考試與提醒</button>
-    <button class="tab parent" role="tab" aria-selected="false" data-tab="parent">家長</button>
+    <button class="tab" role="tab" aria-selected="true" data-tab="plan"><span class="ic tab-ic" data-stk="study" aria-hidden="true"></span>今日計劃</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="tt"><span class="ic tab-ic" data-stk="write" aria-hidden="true"></span>課表與課本</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="notes"><span class="ic tab-ic" data-stk="think" aria-hidden="true"></span>重點練習</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="rem"><span class="ic tab-ic" data-stk="cheer" aria-hidden="true"></span>考試與提醒</button>
+    <button class="tab parent" role="tab" aria-selected="false" data-tab="parent"><span class="ic tab-ic" data-stk="tea" aria-hidden="true"></span>家長</button>
   </nav>
 
   <!-- PLAN -->
   <section class="panel" id="panel-plan">
+    <span class="ic peek" data-stk="happy" aria-hidden="true"></span>
     <div id="parent-msg"></div>
     <div id="exam-strip"></div>
     <div class="row between">
-      <h2 id="plan-title">讀書計劃</h2>
+      <h2><span class="ic" data-stk="study" aria-hidden="true"></span><span id="plan-title">讀書計劃</span></h2>
       <div class="days" id="plan-days"></div>
     </div>
     <div id="plan-body"></div>
@@ -363,7 +385,8 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
 
   <!-- TIMETABLE -->
   <section class="panel" id="panel-tt" hidden>
-    <h2>學校與課本</h2>
+    <span class="ic peek" data-stk="write" aria-hidden="true"></span>
+    <h2><span class="ic" data-stk="write" aria-hidden="true"></span>學校與課本</h2>
     <div class="form">
       <div class="field"><label for="sc-name">學校</label><input id="sc-name" maxlength="20" placeholder="例如：中正國小"></div>
       <div class="field"><label for="sc-grade">年級</label>
@@ -375,7 +398,7 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
     </div>
     <div class="divider"></div>
     <div class="row between">
-      <h2>我的課表</h2>
+      <h2><span class="ic" data-stk="study" aria-hidden="true"></span>我的課表</h2>
       <button class="btn ghost" id="tt-clear">清空課表</button>
     </div>
     <div class="note">先點一個科目，再點下面的格子，就能把課填進去。選「橡皮擦」可以擦掉。</div>
@@ -383,7 +406,7 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
     <div class="brushes" id="brushes"></div>
     <div class="tt-scroll"><table class="tt" id="tt"></table></div>
     <div class="divider"></div>
-    <h3>補習和才藝</h3>
+    <h3><span class="ic" data-stk="bag" aria-hidden="true"></span>補習和才藝</h3>
     <p class="muted small">填上補習、才藝課的時間，讀書計劃會自動避開，排不下的會提醒你改到週末。</p>
     <ul class="rem-list" id="act-list"></ul>
     <form class="form" id="act-form">
@@ -395,7 +418,7 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
       <button class="btn" type="submit">加入</button>
     </form>
     <div class="divider"></div>
-    <div class="row between"><h3>科目和課本版本</h3><button class="btn ghost" id="preset-subjects" hidden>放入常用科目</button></div>
+    <div class="row between"><h3><span class="ic" data-stk="study" aria-hidden="true"></span>科目和課本版本</h3><button class="btn ghost" id="preset-subjects" hidden>放入常用科目</button></div>
     <p class="muted small">選好每一科用的是哪一家的課本（康軒、南一、翰林、南山……），整理重點的時候會照著那個版本來整理。</p>
     <datalist id="publishers"><option value="康軒"><option value="南一"><option value="翰林"><option value="南山"><option value="何嘉仁"><option value="部編"><option value="學校自編"></datalist>
     <div class="subject-list" id="subject-list"></div>
@@ -408,7 +431,7 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
       <button class="btn" type="submit">加入科目</button>
     </form>
     <div class="divider"></div>
-    <h3>資料備份</h3>
+    <h3><span class="ic" data-stk="happy" aria-hidden="true"></span>資料備份</h3>
     <p class="muted small" id="backup-hint"></p>
     <div class="row">
       <button class="btn" id="bk-export" type="button">匯出備份</button>
@@ -419,7 +442,7 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
     <div id="bk-confirm"></div>
     <div id="sync-sec" hidden>
       <div class="divider" style="margin:18px 0"></div>
-      <h3>家長同步</h3>
+      <h3><span class="ic" data-stk="tea" aria-hidden="true"></span>家長同步</h3>
       <p class="muted small" id="sync-hint">把資料存在家裡的群暉 NAS（或免費的 Firebase），爸媽在自己的手機打開這個網站，就能看到孩子的進度。</p>
       <div id="sync-body"></div>
     </div>
@@ -427,13 +450,15 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
 
   <!-- NOTES -->
   <section class="panel" id="panel-notes" hidden>
+    <span class="ic peek" data-stk="study" aria-hidden="true"></span>
     <div id="notes-view"></div>
   </section>
 
   <!-- REMINDERS -->
   <section class="panel" id="panel-rem" hidden>
+    <span class="ic peek" data-stk="cheer" aria-hidden="true"></span>
     <div class="row between">
-      <h2>考試</h2>
+      <h2><span class="ic" data-stk="cheer" aria-hidden="true"></span>考試</h2>
     </div>
     <div class="form" id="cap-wrap" hidden>
       <div class="field"><label for="set-cap">國中教育會考日期</label><input type="date" id="set-cap"></div>
@@ -451,14 +476,14 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
     <ul class="rem-list" id="exam-list"></ul>
     <div class="divider"></div>
     <div class="bag" style="border-color:var(--primary)">
-      <div class="label">加到手機行事曆</div>
+      <div class="label"><span class="ic" data-stk="alert" aria-hidden="true"></span>加到手機行事曆</div>
       <span>把讀書時間、補習、考試和提醒放進 iPhone 的「行事曆」。這樣就算沒打開小書包，時間到手機也會通知。</span>
       <span class="small muted">之後改了課表、補習或考試，要再按一次。iPhone 請用 Safari 打開這個網站再按，才會跳出「加入行事曆」。</span>
       <div><button class="btn primary" id="ics-btn" type="button">加到行事曆</button></div>
     </div>
     <div class="divider"></div>
     <div class="row between">
-      <h2>提醒</h2>
+      <h2><span class="ic" data-stk="alert" aria-hidden="true"></span>提醒</h2>
       <div class="row">
         <button class="btn sun" id="sound-btn">開啟提醒聲音</button>
         <button class="btn ghost" id="test-btn">5 秒後試一次</button>
@@ -476,32 +501,33 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
 
   <!-- PARENT -->
   <section class="panel" id="panel-parent" hidden>
+    <span class="ic peek" data-stk="tea" aria-hidden="true"></span>
     <div id="parent-lock"></div>
     <div id="parent-content" style="display:flex;flex-direction:column;gap:18px" hidden>
     <div class="row between">
-      <h2>家長看板</h2>
+      <h2><span class="ic" data-stk="tea" aria-hidden="true"></span>家長看板</h2>
       <div class="row"><span class="small muted" id="sync-state"></span>
         <button class="btn ghost" id="pw-change" type="button">改密碼</button>
         <button class="btn ghost" id="parent-lock-btn" type="button">鎖上</button></div>
     </div>
     <div class="stats" id="parent-stats"></div>
     <div class="bag" id="weekly">
-      <div class="row between"><div class="label">本週摘要</div><button class="btn ghost" id="wk-copy" type="button" style="padding:4px 12px">複製文字，貼到 LINE</button></div>
+      <div class="row between"><div class="label"><span class="ic" data-stk="tea" aria-hidden="true"></span>本週摘要</div><button class="btn ghost" id="wk-copy" type="button" style="padding:4px 12px">複製文字，貼到 LINE</button></div>
       <div id="wk-text" style="white-space:pre-line;font-size:14px;line-height:1.7"></div>
     </div>
     <div>
-      <div class="label" style="margin-bottom:8px">這週每天完成多少</div>
+      <div class="label" style="margin-bottom:8px"><span class="ic" data-stk="happy" aria-hidden="true"></span>這週每天完成多少</div>
       <div class="week" id="parent-week"></div>
     </div>
     <div class="divider"></div>
-    <h3>段考成績</h3>
+    <h3><span class="ic" data-stk="cheer" aria-hidden="true"></span>段考成績</h3>
     <p class="muted small">考完在「考試與提醒」填上分數，這裡會畫出每一科的變化，並列出考前練習題的答對率。</p>
     <div id="parent-exams"></div>
     <div class="divider"></div>
-    <h3>練習成績</h3>
+    <h3><span class="ic" data-stk="think" aria-hidden="true"></span>練習成績</h3>
     <div id="parent-scores" style="overflow-x:auto"></div>
     <div class="divider"></div>
-    <h3>柚子獎勵</h3>
+    <h3><span class="ic" data-stk="happy" aria-hidden="true"></span>柚子獎勵</h3>
     <p class="muted small">孩子完成計劃、練習答對會得到柚子。設定可以換的獎勵，孩子兌換後在這裡確認。</p>
     <div id="redeem-list"></div>
     <ul class="rem-list" id="reward-list"></ul>
@@ -511,7 +537,7 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
       <button class="btn" type="submit">加入獎勵</button>
     </form>
     <div class="divider"></div>
-    <h3>給孩子一句話</h3>
+    <h3><span class="ic" data-stk="happy" aria-hidden="true"></span>給孩子一句話</h3>
     <p class="muted small">孩子打開「今日計劃」時會在最上面看到。</p>
     <div id="msg-reply"></div>
     <form class="form" id="msg-form">
@@ -703,7 +729,7 @@ function buildPlan(dow){
 function renderParentMsg(){
   const m=main.message, el=$('parent-msg');
   if(!m||!m.text||m.read){el.innerHTML='';return}
-  el.innerHTML=`<div class="msg"><div><div class="who">爸媽想對你說</div><div class="text">${esc(m.text)}</div>
+  el.innerHTML=`<div class="msg"><div><div class="who"><span class="ic" data-stk="happy" aria-hidden="true"></span>爸媽想對你說</div><div class="text">${esc(m.text)}</div>
     <div class="reply-row">${['收到！','謝謝爸媽','我會加油','好累喔，抱抱'].map(t=>`<button class="btn ghost" data-reply="${t}" style="padding:4px 10px">${t}</button>`).join('')}</div>
     <div class="reply-row"><input class="inline-input" id="reply-text" maxlength="40" placeholder="或自己打一句話" style="flex:1;min-width:140px"><button class="btn" id="reply-send" type="button" style="padding:4px 12px">回覆</button></div>
   </div></div>`;
@@ -711,12 +737,12 @@ function renderParentMsg(){
 function renderExamStrip(){
   const list=upcomingExams(todayKey()).slice(0,4), el=$('exam-strip');
   const cd=capDate(), cdays=cd?daysBetween(todayKey(),cd):-1;
-  const capCard=cdays>=0?`<div class="exam cap"><div><span class="pill plain">${main.settings.capDate?'':'預估'}會考</span></div><div class="d">${cdays}<small>天</small></div><div class="nm">國中教育會考</div><div class="small muted">${+cd.slice(5,7)}/${+cd.slice(8)}</div></div>`:'';
+  const capCard=cdays>=0?`<div class="exam cap"><div class="row between"><span class="pill plain">${main.settings.capDate?'':'預估'}會考</span><span class="ic" data-stk="cheer" aria-hidden="true"></span></div><div class="d">${cdays}<small>天</small></div><div class="nm">國中教育會考</div><div class="small muted">${+cd.slice(5,7)}/${+cd.slice(8)}</div></div>`:'';
   if(!list.length&&!capCard){el.innerHTML='';return}
-  el.innerHTML='<div class="label" style="margin-bottom:8px">考試倒數</div><div class="exams">'+capCard+list.map(e=>{
+  el.innerHTML='<div class="label" style="margin-bottom:8px"><span class="ic" data-stk="cheer" aria-hidden="true"></span>考試倒數</div><div class="exams">'+capCard+list.map(e=>{
     const s=subj(e.sid);
     return `<div class="exam${e.days<=3?' soon':''}">
-      <div>${s?`<span class="subj" style="--h:${s.h}">${esc(s.name)}</span>`:''}</div>
+      <div class="row between">${s?`<span class="subj" style="--h:${s.h}">${esc(s.name)}</span>`:''}<span class="ic" data-stk="${e.days<=3?'cheer':'study'}" aria-hidden="true"></span></div>
       <div class="d">${e.days===0?'今天':e.days}${e.days===0?'':'<small>天</small>'}</div>
       <div class="nm">${esc(e.title)}</div>${e.scope?`<div class="small muted">${esc(e.scope)}</div>`:''}</div>`}).join('')+'</div>';
 }
@@ -781,7 +807,7 @@ function renderPlan(){
       <b style="font-variant-numeric:tabular-nums;white-space:nowrap">${nDone}/${total}${nDone===total&&total?' 全部完成！':''}</b></div>
     ${total&&nDone===total?`<div class="celebrate"><div class="capy">${sticker('onsen')}</div><div><b>全部完成！</b><br>豚豚去泡溫泉了，你也好好休息吧。</div></div>`:''}
     ${items.length?`<ol class="plan">${list}</ol>`:`<div class="empty"><div class="capy" style="width:120px">${sticker('sleep')}</div>這天沒有排讀書，好好休息！</div>`}
-    ${items.movedOut&&items.movedOut.length?`<div class="bag" style="border-color:var(--line)"><div class="label">已經改到週末</div>${items.movedOut.map(m=>`<div class="row between"><span>${esc(m.title)}（${m.mins} 分鐘）</span><button class="go" data-unmove="${m.id}">放回今天</button></div>`).join('')}</div>`:''}
+    ${items.movedOut&&items.movedOut.length?`<div class="bag" style="border-color:var(--line)"><div class="label"><span class="ic" data-stk="sleep" aria-hidden="true"></span>已經改到週末</div>${items.movedOut.map(m=>`<div class="row between"><span>${esc(m.title)}（${m.mins} 分鐘）</span><button class="go" data-unmove="${m.id}">放回今天</button></div>`).join('')}</div>`:''}
     ${items.lightened&&items.lightened.length?`<div class="note">今天比較累，預習先跳過：${items.lightened.map(esc).join('、')}。早點休息！</div>`:''}
     ${items.overflow&&items.overflow.length?`<div class="warnbox">已經超過 ${esc(main.settings.bedtime||'22:30')}，這些今天排不下：${items.overflow.map(esc).join('、')}。可以改到週末讀，或把每科的分鐘數調少一點。</div>`:''}
     ${bagHTML()}
@@ -793,7 +819,7 @@ function bagHTML(){
   const things=uniq(main.timetable[nd]||[]).map(subj).filter(s=>s&&s.bring);
   const lbl=(viewDow>=5||viewDow===0)?'星期一':'明天（星期'+WD[nd]+'）';
   const examTomorrow=main.exams.filter(e=>daysBetween(dkey(dateForDow(viewDow)),e.date)===(viewDow===5?3:viewDow===0?1:1));
-  return `<div class="bag"><div class="label">${lbl}書包要帶</div>`+(things.length||examTomorrow.length?
+  return `<div class="bag"><div class="label"><span class="ic" data-stk="bag" aria-hidden="true"></span>${lbl}書包要帶</div>`+(things.length||examTomorrow.length?
     '<ul>'+things.map(s=>`<li><span class="subj" style="--h:${s.h}">${esc(s.name)}</span> ${esc(s.bring)}</li>`).join('')
       +examTomorrow.map(e=>`<li><b>要考 ${esc(subj(e.sid)?.name||'')}：</b>${esc(e.title)}，記得帶鉛筆、橡皮擦</li>`).join('')+'</ul>'
     :'<span class="muted small">沒有特別要帶的東西。</span>')+'</div>';
@@ -910,7 +936,7 @@ function renderTTPhoto(){
       <div class="row"><button class="btn primary" id="tt-apply">套用這份課表</button><button class="btn ghost" id="tt-cancel">不對，重新拍</button></div></div>`;
     return;
   }
-  el.innerHTML=`<div class="bag"><div class="label">拍照自動填課表</div>
+  el.innerHTML=`<div class="bag"><div class="label"><span class="ic" data-stk="write" aria-hidden="true"></span>拍照自動填課表</div>
     <div class="row"><input type="file" id="tt-file" accept="image/*" aria-label="課表照片" style="min-width:0;max-width:100%"><button class="btn primary" id="tt-read" ${ttGen?'disabled':''}>${ttGen?'正在看課表……':'讀取課表'}</button></div>
     <span class="small muted">整張課表都要拍進去，字要清楚。讀完會先給你確認，按「套用」才會填進去。</span></div>`;
 }
@@ -997,7 +1023,7 @@ function renderNotes(){
       <button class="btn primary" type="submit" ${gen?'disabled':''}>整理這次段考的重點</button></form>`
     :`<div class="empty">還沒有要考的考試。先到「考試與提醒」加上段考日期和範圍。<button class="btn" type="button" data-goto="rem">去加考試</button></div>`;
   v.innerHTML=`<div style="display:flex;flex-direction:column;gap:18px">
-    <div class="row between"><h2>整理上課重點</h2>
+    <div class="row between"><h2><span class="ic" data-stk="think" aria-hidden="true"></span>整理上課重點</h2>
       <span class="small muted">${esc(sc.name||'學校未填')}・${esc(sc.grade||'年級未填')}・${sc.term==='下'?'下':'上'}學期</span></div>
     ${ask?`${modeHTML}${genMode==='exam'?examFormHTML:''}<form class="form" id="gen-form" ${genMode==='exam'?'hidden':''}>
       <div class="field"><label for="g-grade">哪個年級的內容</label><select id="g-grade">${["一年級","二年級","三年級","四年級","五年級","六年級","國一","國二","國三"].map(g=>`<option${g===(drafts["g-grade"]||main.school.grade)?" selected":""}>${g}</option>`).join("")}</select></div>
@@ -1008,31 +1034,31 @@ function renderNotes(){
       <div class="field full" id="g-photo-wrap" ${imagesOK?'':'hidden'}><label for="g-photo">拍課本或筆記（可選，最多 3 張）</label><input type="file" id="g-photo" accept="image/*" multiple></div>
       <button class="btn primary" type="submit" ${gen||!studySubjects.length?'disabled':''}>幫我整理重點和出題</button>
     </form>
-    ${gen?`<div class="thinking"><span class="dots"><i></i><i></i><i></i></span><span>正在整理「${esc(gen)}」，大約要半分鐘……</span><button class="btn ghost" id="gen-stop">停止</button></div>`:''}
+    ${gen?`<div class="thinking"><span class="ic think-bob" data-stk="think" aria-hidden="true"></span><span>正在整理「${esc(gen)}」，大約要半分鐘……</span><button class="btn ghost" id="gen-stop">停止</button></div>`:''}
     ${!studySubjects.length?'<p class="muted small">先到「課表與課本」加入科目，才能整理重點。</p>':''}
     <p class="muted small">AI 會照著年級和課本版本整理重點，再出 5 題選擇題。打上或拍下課本內容會最準；沒有提供的話，它只能依課綱和常見教材來整理，內容請爸媽或老師幫忙看一下。</p>`
     :`<div class="note">AI 整理重點要在 Claude 裡打開這一頁才能用。已經整理好的重點和練習題還是可以看、可以練習。</div>`}
     <div class="divider"></div>
-    ${mockCandidates().map(c=>`<div class="bag" style="border-color:var(--bad)"><div class="row between"><div><div class="label">模擬考</div><b style="font-family:var(--f-display);font-size:18px">${esc(subj(c.e.sid).name)} ${esc(c.e.title)}（${c.e.days===0?'今天':c.e.days+' 天後'}）</b>
+    ${mockCandidates().map(c=>`<div class="bag" style="border-color:var(--bad)"><div class="row between"><div><div class="label"><span class="ic" data-stk="cheer" aria-hidden="true"></span>模擬考</div><b style="font-family:var(--f-display);font-size:18px">${esc(subj(c.e.sid).name)} ${esc(c.e.title)}（${c.e.days===0?'今天':c.e.days+' 天後'}）</b>
       <div class="small muted">從這一科的練習題抽 ${Math.min(20,c.items.length)} 題，限時作答，像真的考試一樣。</div></div><button class="btn primary" data-mock="${c.e.id}">開始模擬考</button></div></div>`).join('')}
-    <div class="bag"><div class="label">數學無限練習（國二上）</div><span class="small muted">程式自動出題，每次數字都不一樣，不用網路也能練。答錯的會進錯題本。</span>
+    <div class="bag"><div class="label"><span class="ic" data-stk="think" aria-hidden="true"></span>數學無限練習（國二上）</div><span class="small muted">程式自動出題，每次數字都不一樣，不用網路也能練。答錯的會進錯題本。</span>
       <div class="units">${MATH_UNITS.map(u=>`<button class="unit-btn" data-mathgen="${u.id}">${u.name}</button>`).join('')}</div></div>
-    <div class="bag"><div class="label">英文單字卡</div>
+    <div class="bag"><div class="label"><span class="ic" data-stk="study" aria-hidden="true"></span>英文單字卡</div>
       <form class="form" id="vocab-form">
         <div class="field full"><label for="vc-title">哪一課</label><input id="vc-title" maxlength="20" placeholder="例如：翰林 L3" value="${esc(drafts['vc-title']||'')}" required></div>
         <div class="field full"><label for="vc-text">一行一個：英文 中文</label><textarea id="vc-text" maxlength="4000" placeholder="apple 蘋果&#10;borrow 借入&#10;library 圖書館">${esc(drafts['vc-text']||'')}</textarea></div>
         ${ask&&imagesOK?`<div class="field full"><label for="vc-photo">或拍單字表，自動填進上面（可選）</label><input type="file" id="vc-photo" accept="image/*" ${vocabGen?'disabled':''}></div>`:''}
         <button class="btn primary" type="submit">${vocabGen?'正在讀單字……':'做成單字卡'}</button>
       </form></div>
-    ${(()=>{const all=wrongList(),due=wrongDue();return all.length?`<div class="bag" style="border-color:var(--bad)"><div class="row between"><div><div class="label">錯題本</div>
+    ${(()=>{const all=wrongList(),due=wrongDue();return all.length?`<div class="bag" style="border-color:var(--bad)"><div class="row between"><div><div class="label"><span class="ic" data-stk="think" aria-hidden="true"></span>錯題本</div>
       <b style="font-family:var(--f-display);font-size:18px">${due.length?`今天要複習 ${due.length} 題`:'今天沒有要複習的錯題'}</b>
       <div class="small muted">共 ${all.length} 題。每題要在第 1、3、7 天各答對一次才會畢業。</div></div>${due.length?'<button class="btn primary" id="w-start">開始複習</button>':''}</div></div>`:''})()}
-    <div class="row between"><h3>我的重點筆記</h3>
+    <div class="row between"><h3><span class="ic" data-stk="study" aria-hidden="true"></span>我的重點筆記</h3>
       <select id="n-filter" class="inline-input" style="width:auto" aria-label="只看某一科"><option value="">全部科目</option>${main.subjects.map(s=>`<option value="${s.id}"${s.id===practiceFilter?' selected':''}>${esc(s.name)}</option>`).join('')}</select></div>
     ${list.length?`<div class="notes">${list.map(n=>{const s=subj(n.sid),ls=lastScore(n);
       return `<button class="ncard" data-open="${n.id}">
         <div class="row" style="gap:6px">${s?`<span class="subj" style="--h:${s.h}">${esc(s.name)}</span>`:''}${n.publisher?`<span class="pill plain">${esc(n.publisher)}</span>`:''}${n.examId?'<span class="pill exam">段考</span>':''}${n.example?'<span class="pill next">範例</span>':''}</div>
-        <div class="tl">${esc(n.title||n.unit)}</div>
+        <div class="tl">${esc(n.title||n.unit)}</div><span class="ic" data-stk="${n.type==='vocab'?'study':n.examId?'cheer':n.auto?'think':'write'}" aria-hidden="true"></span>
         <div class="meta">${n.type==='vocab'?(n.cards||[]).length+' 個單字':(n.sections||[]).length?n.sections.length+' 課／章':(n.points||[]).length+' 個重點'}・${(n.questions||[]).length} 題練習${ls?`・上次 ${ls.score}/${ls.total}`:'・還沒練習'}</div></button>`}).join('')}</div>`
       :'<div class="empty">還沒有重點筆記。在上面填好科目和第幾課，按「幫我整理重點和出題」。</div>'}
   </div>`;
@@ -1069,9 +1095,9 @@ function renderNoteDetail(v,id){
     ${n.uncertain?'<div class="warnbox">這份重點是依課綱和常見教材整理的，跟課本可能不完全一樣，請對照課本看。</div>':''}
     ${n.example?'<div class="warnbox">這是示範用的範例筆記。</div>':''}
     ${(n.sections||[]).length?`<div style="display:flex;flex-direction:column;gap:14px">${n.sections.map(sec=>`<div><h3 style="margin-bottom:6px">${esc(sec.name)}</h3><ol class="points">${sec.points.map(p=>`<li>${esc(p)}</li>`).join('')}</ol></div>`).join('')}</div>`
-      :n.type==='vocab'?'':`<div><div class="label" style="margin-bottom:6px">上課重點</div><ol class="points">${(n.points||[]).map(p=>`<li>${esc(p)}</li>`).join('')}</ol></div>`}
+      :n.type==='vocab'?'':`<div><div class="label" style="margin-bottom:6px"><span class="ic" data-stk="study" aria-hidden="true"></span>上課重點</div><ol class="points">${(n.points||[]).map(p=>`<li>${esc(p)}</li>`).join('')}</ol></div>`}
     ${(n.tips||[]).length?`<div class="warnbox"><b>考前提醒：</b>${n.tips.map(esc).join(' ')}</div>`:''}
-    ${(n.terms||[]).length?`<div><div class="label" style="margin-bottom:6px">要記住的</div><div class="terms">${n.terms.map(t=>`<div class="term"><b>${esc(t.word)}</b>${esc(t.meaning)}</div>`).join('')}</div></div>`:''}
+    ${(n.terms||[]).length?`<div><div class="label" style="margin-bottom:6px"><span class="ic" data-stk="think" aria-hidden="true"></span>要記住的</div><div class="terms">${n.terms.map(t=>`<div class="term"><b>${esc(t.word)}</b>${esc(t.meaning)}</div>`).join('')}</div></div>`:''}
     <div class="row">
       ${(n.questions||[]).length?`<button class="btn primary" id="q-start">開始練習（${n.questions.length} 題）</button>`:''}
       <button class="btn ghost" id="n-del">${delArmed?'再按一次確定刪除':'刪除這份筆記'}</button>
@@ -1373,7 +1399,7 @@ function renderParent(){
     ['下一場考試',nx?(nx.days===0?'今天':nx.days+' 天'):'—',nx?`${subj(nx.sid)?.name||''} ${nx.title}`:'沒有排考試'],
     ['練習平均答對',avg==null?'—':avg+'%',`共練習 ${allAtt.length} 次`],
     ['這週專注',weekKeys().reduce((a,k)=>a+(progress[k]?+progress[k].focusMin||0:0),0)+' 分','用專注計時器讀的時間']
-  ].map(([k,v,s])=>`<div class="stat"><div class="k">${k}</div><div class="v">${esc(v)}</div><div class="small muted">${esc(s)}</div></div>`).join('');
+  ].map(([k,v,s],i)=>`<div class="stat"><span class="ic" data-stk="${['happy','cheer','think','study'][i]||'happy'}" aria-hidden="true"></span><div class="k">${k}</div><div class="v">${esc(v)}</div><div class="small muted">${esc(s)}</div></div>`).join('');
   const rows=noteList().filter(n=>(n.attempts||[]).length);
   $('parent-scores').innerHTML=rows.length?`<table class="scores"><thead><tr><th>科目</th><th>單元</th><th>練習次數</th><th>最近一次</th><th>最好</th></tr></thead><tbody>${rows.map(n=>{
     const a=n.attempts, l=a[a.length-1], best=Math.max(...a.map(x=>x.score)), s=subj(n.sid);
@@ -1415,6 +1441,7 @@ function chime(){
 }
 const fired=new Set(); let current=null;
 function showAlert(a){
+  $('al-capy').innerHTML=sticker(a.stk||'alert');
   current=a;
   $('al-kicker').textContent=a.kicker||'時間到了';
   $('al-title').textContent=a.title;
@@ -1443,14 +1470,14 @@ function tick(){
     const k=dk+it.id;
     if(fmt(it.start)===hm&&!done[it.id]&&!fired.has(k)){
       fired.add(k);
-      showAlert({title:it.kind==='break'?'休息時間':it.title,note:(it.kind==='break'?'離開書桌，喝口水、看看遠方':it.note)+`（${it.mins} 分鐘）`});
+      showAlert({stk:KIND_STICKER[it.kind]||'alert',title:it.kind==='break'?'休息時間':it.title,note:(it.kind==='break'?'離開書桌，喝口水、看看遠方':it.note)+`（${it.mins} 分鐘）`});
       renderPlan(); return;
     }
   }
   for(const e of main.exams){
     const d=daysBetween(dk,e.date), s=subj(e.sid), k='x'+e.id+dk;
     if(((d===1&&hm==='19:00')||(d===0&&hm==='07:00'))&&!fired.has(k)){
-      fired.add(k); showAlert({kicker:d===0?'今天考試':'明天考試',title:`${s?s.name:''} ${e.title}`,note:(e.scope?'範圍：'+e.scope+'。':'')+(d===0?'深呼吸，你準備好了！':'今晚早點睡，鉛筆和橡皮擦放進書包。')}); return;
+      fired.add(k); showAlert({stk:'cheer',kicker:d===0?'今天考試':'明天考試',title:`${s?s.name:''} ${e.title}`,note:(e.scope?'範圍：'+e.scope+'。':'')+(d===0?'深呼吸，你準備好了！':'今晚早點睡，鉛筆和橡皮擦放進書包。')}); return;
     }
   }
   for(const r of main.reminders){
@@ -1476,7 +1503,18 @@ $('notify-btn').addEventListener('click',async()=>{
 
 /* ---------- toast & tabs ---------- */
 let tt;
-function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2600)}
+function toast(msg){
+  const t=$('toast'), k=/全部完成|太厲害|畢業|好棒|兌換好了|戴上/.test(msg)?'happy':/累|休息|睡/.test(msg)?'sleep':/不對|不夠|沒辦法|看不|連不上|失敗|錯/.test(msg)?'think':'normal';
+  t.innerHTML=`<span class="ic">${sticker(k)}</span><span></span>`; t.lastChild.textContent=msg; t.hidden=false;
+  clearTimeout(tt); tt=setTimeout(()=>t.hidden=true,2600);
+  if(/全部完成|全部拼對|全部答對|畢業/.test(msg)) confetti();
+}
+function confetti(){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  for(let i=0;i<16;i++){const el=document.createElement('span'); el.className='confetti'; el.innerHTML=i%4===0?sticker('happy'):yuzu(28);
+    el.style.left=(Math.random()*92+2)+'vw'; el.style.animationDuration=(1.8+Math.random()*1.6)+'s'; el.style.animationDelay=(Math.random()*.6)+'s';
+    if(i%4===0) el.style.width='40px'; document.body.append(el); setTimeout(()=>el.remove(),4200)}
+}
 function showTab(name){
   document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected',x.dataset.tab===name));
   ['plan','tt','notes','rem','parent'].forEach(p=>$('panel-'+p).hidden=p!==name);
@@ -1518,7 +1556,7 @@ function contactHTML(dk){
   const c=(progress[dk]&&progress[dk].contact)||{hw:[],bring:[],notes:[]};
   const pv=contactPreview;
   return `<div class="contact">
-    <div class="row between"><div class="label">今天的聯絡簿</div>
+    <div class="row between"><div class="label"><span class="ic" data-stk="write" aria-hidden="true"></span>今天的聯絡簿</div>
       ${ask&&imagesOK?`<label class="btn ghost" for="cb-photo" style="padding:4px 12px;cursor:pointer">${contactGen?'正在讀聯絡簿……':'拍聯絡簿'}</label><input type="file" id="cb-photo" accept="image/*" hidden ${contactGen?'disabled':''}>`:''}</div>
     ${pv?`<div class="warnbox" style="display:flex;flex-direction:column;gap:6px"><b>讀到的內容，確認一下</b>
       ${pv.hw.length?`<span>作業：${pv.hw.map(esc).join('、')}</span>`:''}${pv.bring.length?`<span>要帶：${pv.bring.map(esc).join('、')}</span>`:''}
@@ -1573,7 +1611,7 @@ function accSVG(){
 }
 function closetHTML(){
   const c=main.closet||{owned:[],wearing:''}, bal=yuzuBalance();
-  return `<div><div class="label" style="margin-bottom:6px">豚豚衣櫃</div><div class="closet">${CLOSET.map(([k,name,cost])=>{
+  return `<div><div class="label" style="margin-bottom:6px"><span class="ic" data-stk="happy" aria-hidden="true"></span>豚豚衣櫃</div><div class="closet">${CLOSET.map(([k,name,cost])=>{
     const own=(c.owned||[]).includes(k), wear=c.wearing===k;
     const prev=main.closet; main.closet={...c,wearing:k}; const img=sticker('normal'); main.closet=prev;
     return `<div class="cl-item${wear?' wearing':''}"><span class="capy">${img}</span><span>${name}</span>
@@ -1914,7 +1952,7 @@ function shopHTML(){
 }
 function renderRewardsAdmin(){
   const pend=main.redemptions.filter(r=>r.status==='pending');
-  $('redeem-list').innerHTML=pend.length?`<div class="bag" style="border-color:var(--sun)"><div class="label">孩子兌換了，等你兌現</div>${pend.map(r=>`<div class="row between"><span>${esc(r.name)}（${r.cost} 顆，${new Date(r.at).getMonth()+1}/${new Date(r.at).getDate()}）</span>
+  $('redeem-list').innerHTML=pend.length?`<div class="bag" style="border-color:var(--sun)"><div class="label"><span class="ic" data-stk="happy" aria-hidden="true"></span>孩子兌換了，等你兌現</div>${pend.map(r=>`<div class="row between"><span>${esc(r.name)}（${r.cost} 顆，${new Date(r.at).getMonth()+1}/${new Date(r.at).getDate()}）</span>
     <span class="row" style="gap:6px"><button class="btn primary" data-rdone="${r.id}" style="padding:4px 12px">已兌現</button><button class="btn ghost" data-rback="${r.id}" style="padding:4px 12px">退回柚子</button></span></div>`).join('')}</div>`:'';
   $('reward-list').innerHTML=`<li class="small muted">孩子現在有 ${yuzuBalance()} 顆柚子（總共賺了 ${yuzuEarned()} 顆）。</li>`+main.rewards.map(r=>`<li class="rem"><div class="when">${yuzu(18)}<small>${r.cost} 顆</small></div><div>${esc(r.name)}</div><button class="link" data-wdel="${r.id}">刪除</button></li>`).join('');
 }
@@ -2129,7 +2167,7 @@ $('al-capy').innerHTML=sticker('alert');
 $('capy-say').textContent='我是豚豚，今天也慢慢來！';
 $('mascot').addEventListener('click',()=>{
   const m=$('mascot'); m.classList.remove('hop'); void m.offsetWidth; m.classList.add('hop');
-  m.innerHTML=sticker('happy'); setTimeout(()=>{m.innerHTML=sticker('normal')},900); capySay();
+  m.innerHTML=sticker(PICK(['happy','tea','study','cheer','write','sleep'])); setTimeout(()=>{m.innerHTML=sticker('normal')},1400); capySay();
 });
 
 /* ---------- 3: family sync (Firebase or PocketBase on a home NAS) ---------- */
@@ -2258,6 +2296,12 @@ $('sync-body').addEventListener('click',e=>{
     fbStopArmed=false; fbSave(null); toast('停止同步了'); setTimeout(()=>location.reload(),800)}
 });
 
+/* ---------- sticker placeholders ---------- */
+function fillStickers(root,force){
+  (root||document).querySelectorAll(force?'[data-stk]':'[data-stk]:not([data-done])').forEach(el=>{el.innerHTML=sticker(el.dataset.stk);el.setAttribute('data-done','')});
+}
+new MutationObserver(()=>fillStickers()).observe(document.body,{childList:true,subtree:true});
+
 /* ---------- render ---------- */
 function renderHeader(){
   const n=now(), h=n.getHours();
@@ -2266,7 +2310,7 @@ function renderHeader(){
   $('example-banner').hidden=!main.isExample;
   ['start','hw','review','preview','bedtime'].forEach(k=>setVal('set-'+k,main.settings[k]));
 }
-function renderAll(){renderHeader();renderPlan();renderTT();if(!quiz&&!flash&&!spell)renderNotes();renderRem();renderParent()}
+function renderAll(){fillStickers(document,true);renderHeader();renderPlan();renderTT();if(!quiz&&!flash&&!spell)renderNotes();renderRem();renderParent()}
 
 setFormDefaults(); renderAll(); tick(); renderLock();
 

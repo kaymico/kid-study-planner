@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#3A2A1E">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon.svg?v=3" type="image/svg+xml">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon-v3.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="小書包">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
@@ -82,6 +83,9 @@ header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:1
 .chart-card{border:2px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;min-width:0}
 .chart-card svg{display:block;width:100%;height:auto}
 .charts{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.exam.cap{border-color:var(--primary);background:var(--primary-soft)}
+.exam.cap .d{color:var(--primary)}
+.item.moved{opacity:.6;border-style:dashed}
 .hero{display:flex;gap:12px;align-items:flex-end;min-width:0}
 .hero .hello{min-width:0}
 .mascot{width:100px;flex:none;cursor:pointer;background:none;border:0;padding:0}
@@ -405,6 +409,12 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
     <div class="row between">
       <h2>考試</h2>
     </div>
+    <div class="form" id="cap-wrap" hidden>
+      <div class="field"><label for="set-cap">國中教育會考日期</label><input type="date" id="set-cap"></div>
+      <p class="muted small" style="grid-column:1/-1;margin:0">先放的是預估日期，教育部公布正式日期後請改一下。國二、國三的週末會自動排一點國一、國二的複習，因為會考三年都考。</p>
+    </div>
+    <div class="row between" hidden>
+    </div>
     <form class="form" id="exam-form">
       <div class="field"><label for="ne-subj">科目</label><select id="ne-subj" required></select></div>
       <div class="field"><label for="ne-title">考什麼</label><input id="ne-title" maxlength="20" placeholder="例如：第一次段考" required></div>
@@ -610,6 +620,7 @@ function buildPlan(dow){
   const acts=(main.activities||[]).filter(a=>(a.days||[]).includes(dow)).map(a=>({...a,s:toMin(a.start),e:toMin(a.end)})).filter(a=>a.e>a.s).sort((a,b)=>a.s-b.s);
   const bed=toMin(s.bedtime||'22:30');
   const add=(kind,id,title,mins,sid,note)=>{
+    if(moved[id]){movedOut.push({id,title,mins,sid});return}
     for(const a of acts) if(t<a.e&&t+mins>a.s){ if(!a.shown){a.shown=true;items.push({id:'act-'+a.id,kind:'activity',title:a.name,mins:a.e-a.s,start:a.s,note:a.start+'–'+a.end})} t=Math.max(t,a.e) }
     if(t+mins>bed&&kind!=='pack'){ if(kind!=='break') overflow.push(title); return }
     items.push({id,kind,title,mins,sid,note,start:t});t+=mins};
@@ -618,13 +629,14 @@ function buildPlan(dow){
     acts.forEach(a=>{if(!a.shown&&a.e>first&&a.s<bed){a.shown=true;items.push({id:'act-'+a.id,kind:'activity',title:a.name,mins:a.e-a.s,start:a.s,note:a.start+'–'+a.end})}});
     items.sort((a,b)=>a.start-b.start);
     while(items.length&&items[items.length-1].kind==='break') items.pop();
-    items.overflow=overflow; return items;
+    items.overflow=overflow; items.movedOut=movedOut; return items;
   };
   const wrongN=wrongList().filter(w=>w.due<=dk).length;
   const wrongBlock=wrongN?[['wrong','wrong','錯題複習',Math.min(20,5+wrongN*2),null,`錯題本有 ${wrongN} 題要複習`]]:[];
   const brk=()=>add('break','break'+(nb++),'休息一下',10);
   const isStudy=id=>{const x=subj(id);return x&&x.study};
   const weekend=dow===0||dow===6;
+  const moved=(progress[dk]&&progress[dk].moved)||{}, movedOut=[]; items.movedOut=movedOut;
   // exam blocks: nearest exam per subject within 7 days, not today
   const ex={}; upcomingExams(dk).forEach(e=>{if(e.days>=1&&e.days<=7&&subj(e.sid)&&!ex[e.sid]) ex[e.sid]=e});
   const examBlocks=Object.values(ex).map(e=>['exam','exam-'+e.sid,subj(e.sid).name+' 考前複習',(weekend?30:+s.review)+boost(e.days),e.sid,
@@ -633,7 +645,7 @@ function buildPlan(dow){
   if(weekend){
     t=toMin('09:30');
     const all=uniq([1,2,3,4,5].flatMap(d=>main.timetable[d]||[])).filter(id=>isStudy(id)&&!ex[id]);
-    blocks=[...examBlocks,...wrongBlock,...all.map(id=>['review','review-'+id,subj(id).name+' 一週複習',20,id,'把這週的筆記和習作再看一次'])];
+    blocks=[...examBlocks,...wrongBlock,...redoBlocks(dk,dow),...capBlocks(dk,dow),...all.map(id=>['review','review-'+id,subj(id).name+' 一週複習',20,id,'把這週的筆記和習作再看一次'])];
   }else{
     t=toMin(s.start);
     add('hw','hw','寫今天的作業',+s.hw,null,'照著聯絡簿一項一項寫');
@@ -658,8 +670,10 @@ function renderParentMsg(){
 }
 function renderExamStrip(){
   const list=upcomingExams(todayKey()).slice(0,4), el=$('exam-strip');
-  if(!list.length){el.innerHTML='';return}
-  el.innerHTML='<div class="label" style="margin-bottom:8px">考試倒數</div><div class="exams">'+list.map(e=>{
+  const cd=capDate(), cdays=cd?daysBetween(todayKey(),cd):-1;
+  const capCard=cdays>=0?`<div class="exam cap"><div><span class="pill plain">${main.settings.capDate?'':'預估'}會考</span></div><div class="d">${cdays}<small>天</small></div><div class="nm">國中教育會考</div><div class="small muted">${+cd.slice(5,7)}/${+cd.slice(8)}</div></div>`:'';
+  if(!list.length&&!capCard){el.innerHTML='';return}
+  el.innerHTML='<div class="label" style="margin-bottom:8px">考試倒數</div><div class="exams">'+capCard+list.map(e=>{
     const s=subj(e.sid);
     return `<div class="exam${e.days<=3?' soon':''}">
       <div>${s?`<span class="subj" style="--h:${s.h}">${esc(s.name)}</span>`:''}</div>
@@ -700,18 +714,20 @@ function renderPlan(){
     }
     const s=it.sid?subj(it.sid):null;
     const tag=s?`<span class="subj" style="--h:${s.h}">${esc(s.name)}</span>`:'';
-    const kind={wrong:'錯題複習',hw:'作業',review:it.title.includes('一週')?'一週複習':'複習',preview:'預習',pack:'書包',exam:'考前複習'}[it.kind]||it.title;
+    const kind={redo:it.title,cap:it.title.split(' ').slice(1).join(' '),wrong:'錯題複習',hw:'作業',review:it.title.includes('一週')?'一週複習':'複習',preview:'預習',pack:'書包',exam:'考前複習'}[it.kind]||it.title;
     const en=it.exam&&noteForExam(it.exam.id);
     const practice=en?`<button class="go" data-opennote="${en}">看段考重點、做模擬題 →</button>`
       :it.exam&&ask?`<button class="go" data-examnote="${it.exam.id}">幫我整理這次考試的重點 →</button>`
       :it.kind==='wrong'?`<button class="go" data-wrongstart="1">開始錯題複習 →</button>`
       :s&&(it.kind==='exam'||it.kind==='review')&&noteSubjects.has(s.id)?`<button class="go" data-practice="${s.id}">去做 ${esc(s.name)} 練習題 →</button>`:'';
+    const canMove=viewDow>=1&&viewDow<=5&&!isBreak&&!isDone&&!readOnly&&!['hw','pack'].includes(it.kind);
+    const moveBtn=canMove?`<button class="go" data-move="${it.id}" style="color:var(--muted)">今天太累，改到週末</button>`:'';
     const focusBtn=!isBreak&&!isDone&&!readOnly&&it.kind!=='pack'?`<button class="go" data-focus="${it.id}">▶ 開始專注 ${it.mins} 分鐘</button>`:'';
     const fm=(progress[dk]&&progress[dk].focus&&progress[dk].focus[it.id])||0;
     return `<li class="${cls}">
       <div class="time">${fmt(it.start)}<small>${it.mins} 分鐘</small></div>
       <div class="what"><div class="t">${tag}<span class="title">${esc(isBreak?it.title:(s?kind:it.title))}</span>${badge}</div>
-      <div class="n">${esc(it.kind==='activity'?it.note+'，讀書計劃會避開這段時間':isBreak?'離開書桌，喝口水、看看遠方':it.note)}${fm?`（專注了 ${fm} 分鐘）`:''}</div>${practice}${focusBtn}</div>
+      <div class="n">${esc(it.kind==='activity'?it.note+'，讀書計劃會避開這段時間':isBreak?'離開書桌，喝口水、看看遠方':it.note)}${fm?`（專注了 ${fm} 分鐘）`:''}</div>${practice}<span class="row" style="gap:12px">${focusBtn}${moveBtn}</span></div>
       ${isBreak?'<span></span>':`<button class="check" data-id="${it.id}" aria-pressed="${isDone}" aria-label="${isDone?'取消完成':'完成'}：${esc(it.title)}" ${readOnly?'disabled':''}>${isDone?'✓':''}</button>`}
     </li>`}).join('');
   const total=tasks.length, pct=total?nDone/total:0, starN=Math.round(pct*5);
@@ -721,6 +737,7 @@ function renderPlan(){
       <b style="font-variant-numeric:tabular-nums;white-space:nowrap">${nDone}/${total}${nDone===total&&total?' 全部完成！':''}</b></div>
     ${total&&nDone===total?`<div class="celebrate"><div class="capy">${capy('happy',true)}</div><div><b>全部完成！</b><br>豚豚去泡溫泉了，你也好好休息吧。</div></div>`:''}
     ${items.length?`<ol class="plan">${list}</ol>`:`<div class="empty"><div class="capy" style="width:120px">${capy('sleep')}</div>這天沒有排讀書，好好休息！</div>`}
+    ${items.movedOut&&items.movedOut.length?`<div class="bag" style="border-color:var(--line)"><div class="label">已經改到週末</div>${items.movedOut.map(m=>`<div class="row between"><span>${esc(m.title)}（${m.mins} 分鐘）</span><button class="go" data-unmove="${m.id}">放回今天</button></div>`).join('')}</div>`:''}
     ${items.overflow&&items.overflow.length?`<div class="warnbox">已經超過 ${esc(main.settings.bedtime||'22:30')}，這些今天排不下：${items.overflow.map(esc).join('、')}。可以改到週末讀，或把每科的分鐘數調少一點。</div>`:''}
     ${bagHTML()}
     ${shopHTML()}</div>`;
@@ -739,6 +756,8 @@ function bagHTML(){
 $('panel-plan').addEventListener('click',e=>{
   const d=e.target.closest('.day'); if(d){viewDow=+d.dataset.d;renderPlan();return}
   const fb=e.target.closest('[data-focus]'); if(fb){startFocus(fb.dataset.focus);return}
+  const mv=e.target.closest('[data-move]'); if(mv){moveToWeekend(mv.dataset.move);return}
+  const um=e.target.closest('[data-unmove]'); if(um){undoMove(um.dataset.unmove);return}
   const c=e.target.closest('.check');
   if(c){
     const dk=dkey(dateForDow(viewDow));
@@ -918,6 +937,7 @@ function renderNotes(){
     <div class="row between"><h2>整理上課重點</h2>
       <span class="small muted">${esc(sc.name||'學校未填')}・${esc(sc.grade||'年級未填')}・${sc.term==='下'?'下':'上'}學期</span></div>
     ${ask?`${modeHTML}${genMode==='exam'?examFormHTML:''}<form class="form" id="gen-form" ${genMode==='exam'?'hidden':''}>
+      <div class="field"><label for="g-grade">哪個年級的內容</label><select id="g-grade">${["一年級","二年級","三年級","四年級","五年級","六年級","國一","國二","國三"].map(g=>`<option${g===(drafts["g-grade"]||main.school.grade)?" selected":""}>${g}</option>`).join("")}</select></div>
       <div class="field"><label for="g-subj">科目</label><select id="g-subj" required>${studySubjects.map(s=>`<option value="${s.id}"${s.id===practiceFilter?' selected':''}>${esc(s.name)}${s.publisher?'（'+esc(s.publisher)+'）':''}</option>`).join('')}</select></div>
       <div class="field"><label for="g-unit">第幾課／單元</label><input id="g-unit" maxlength="30" placeholder="例如：L3 或 第 2 章" value="${esc(drafts['g-unit']||'')}" required></div>
       <div class="field full"><label for="g-input">老師說的重點、課本內容（可以貼上或自己打，沒有也可以）</label>
@@ -1035,7 +1055,7 @@ $('panel-notes').addEventListener('click',e=>{
   if(t.id==='gen-stop'&&genCtl){genCtl.abort();return}
 });
 $('panel-notes').addEventListener('change',e=>{if(e.target.id==='n-filter'){practiceFilter=e.target.value;renderNotes()} if(e.target.id==='ge-exam') genExam=e.target.value});
-$('panel-notes').addEventListener('input',e=>{if(['g-unit','g-input','ge-input'].includes(e.target.id)) drafts[e.target.id]=e.target.value});
+$('panel-notes').addEventListener('input',e=>{if(['g-unit','g-input','ge-input','g-grade'].includes(e.target.id)) drafts[e.target.id]=e.target.value});
 $('panel-notes').addEventListener('submit',async e=>{
   if(e.target.id==='gen-exam-form'){e.preventDefault();genExamNote();return}
   if(e.target.id!=='gen-form') return;
@@ -1043,7 +1063,7 @@ $('panel-notes').addEventListener('submit',async e=>{
   const s=subj($('g-subj').value), unit=$('g-unit').value.trim(), input=$('g-input').value.trim();
   if(!s||!unit) return;
   const files=$('g-photo')&&imagesOK?[...$('g-photo').files].slice(0,3):[];
-  const sc=main.school, grade=sc.grade||'國小', term=(sc.term==='下'?'下':'上');
+  const sc=main.school, grade=($('g-grade')&&$('g-grade').value)||sc.grade||'國小', term=(sc.term==='下'?'下':'上');
   const prompt=`你是台灣的國中小家教老師。請幫一位${grade}學生整理「${s.name}」${s.publisher?`（${s.publisher}版）`:''}${term}學期「${unit}」的上課重點，並出練習題。
 
 學生提供的上課內容（可能是空的）：
@@ -1069,7 +1089,7 @@ ${files.length?`另外附上 ${files.length} 張課本或筆記的照片，請�
     const pts=(Array.isArray(r&&r.points)?r.points:[]).map(String).filter(Boolean).slice(0,8);
     if(!pts.length) throw {code:'empty_completion'};
     const id=uid('n');
-    notes[id]={sid:s.id,publisher:s.publisher||'',grade:sc.grade||'',term,unit,input:input.slice(0,3000),
+    notes[id]={sid:s.id,publisher:s.publisher||'',grade,term,unit,input:input.slice(0,3000),
       title:String(r.title||unit).slice(0,40),points:pts,
       terms:(Array.isArray(r.terms)?r.terms:[]).filter(t=>t&&t.word).slice(0,8).map(t=>({word:String(t.word),meaning:String(t.meaning||'')})),
       questions:qs,uncertain:!!r.uncertain||(!input&&!files.length),createdAt:new Date().toISOString(),attempts:[]};
@@ -1132,6 +1152,7 @@ ${files.length?`另外附上 ${files.length} 張課本、筆記或考卷的照�
 
 /* ---------- exams & reminders ---------- */
 function renderRem(){
+  const jh=/^國[一二三]/.test(main.school.grade||''); $('cap-wrap').hidden=!jh; if(jh) setVal('set-cap',capDate()||'');
   const sel=$('ne-subj'), cur=sel.value;
   sel.innerHTML=main.subjects.filter(s=>s.study).map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
   if(cur) sel.value=cur;
@@ -1173,6 +1194,7 @@ $('rem-form').addEventListener('submit',e=>{
   main.reminders.push(r); e.target.reset(); setFormDefaults(); saveMain(); toast('提醒加好了');
 });
 $('rem-list').addEventListener('click',e=>{const b=e.target.closest('[data-rdel]');if(!b)return;main.reminders=main.reminders.filter(r=>r.id!==b.dataset.rdel);saveMain()});
+$('set-cap').addEventListener('change',e=>{main.settings.capDate=e.target.value||'';saveMain()});
 function setFormDefaults(){
   const d=now();d.setDate(d.getDate()+1);$('nr-date').value=dkey(d);$('nr-time').value='07:30';
   const d2=now();d2.setDate(d2.getDate()+7);$('ne-date').value=dkey(d2);
@@ -1249,7 +1271,7 @@ function showAlert(a){
   $('al-note').textContent=a.note||'';
   $('overlay').hidden=false; chime(); $('al-ok').focus();
   if(swReg&&'Notification' in window&&Notification.permission==='granted'&&document.visibilityState!=='visible'){
-    swReg.showNotification(a.title,{body:a.note||a.kicker||'',tag:'planner',icon:'icon-192.png'}).catch(()=>{});
+    swReg.showNotification(a.title,{body:a.note||a.kicker||'',tag:'planner',icon:'icon-v3-192.png'}).catch(()=>{});
   }
 }
 $('al-ok').addEventListener('click',()=>{$('overlay').hidden=true;current=null;toast('加油！你可以的')});
@@ -1319,6 +1341,56 @@ document.addEventListener('click',e=>{
   const o=e.target.closest('[data-opennote]'); if(o){openNote=o.dataset.opennote;showTab('notes');return}
   if(e.target.closest('[data-wrongstart]')){showTab('notes');startWrongReview()}
 });
+
+/* ---------- 會考 & 國一複習 ---------- */
+function capDate(){
+  if(main.settings.capDate) return main.settings.capDate;
+  const g=main.school.grade||''; const left={'國三':0,'國二':1,'國一':2}[g]; if(left==null) return null;
+  const n=now(), endYear=(n.getMonth()>=7?n.getFullYear()+1:n.getFullYear())+left;
+  return `${endYear}-05-16`;
+}
+function capBlocks(dk,dow){
+  const g=main.school.grade||''; if(g!=='國二'&&g!=='國三') return [];
+  const want=g==='國三'?(dow===6?'國一':'國二'):(dow===6?'國一':null); if(!want) return [];
+  const core=main.subjects.filter(x=>x.study&&/國文|數學|英語|英文|生物|理化|自然|地科|社會|歷史|地理|公民/.test(x.name));
+  if(!core.length) return [];
+  const wk=Math.floor(Date.parse(dk+'T00:00:00')/6048e5), sb=core[wk%core.length];
+  return [['cap','cap-'+sb.id,sb.name+' '+want+'複習',20,sb.id,`會考三年都考，這週挑一個${want}的單元複習。可以到「重點練習」選${want}來整理。`]];
+}
+
+/* ---------- 改到週末 ---------- */
+function redoBlocks(dk,dow){
+  if(dow!==6&&dow!==0) return [];
+  const out=[], base=Date.parse(dk+'T12:00:00');
+  const from=dow===6?[5,4,3,2,1]:[6,5,4,3,2], sat=dow===0?dkey(new Date(base-864e5)):null;
+  from.forEach(back=>{
+    const src=dkey(new Date(base-back*864e5)), mv=progress[src]&&progress[src].moved; if(!mv) return;
+    Object.entries(mv).forEach(([id,m])=>{
+      const rid='redo-'+src+'-'+id;
+      if(sat&&progress[sat]&&progress[sat].done&&progress[sat].done[rid]) return;
+      const d=new Date(src+'T12:00:00');
+      out.push(['redo',rid,'補讀：'+(m.title||'').replace(/^\S+\s/,''),+m.mins||15,m.sid||null,`星期${WD[d.getDay()]}改到週末的`]);
+    });
+  });
+  return out;
+}
+function moveToWeekend(id){
+  const dk=dkey(dateForDow(viewDow)), it=buildPlan(viewDow).find(i=>i.id===id); if(!it) return;
+  const p=progress[dk]?clone(progress[dk]):{date:dk,done:{}};
+  p.moved=p.moved||{}; p.moved[id]={title:it.title,mins:it.mins,sid:it.sid||null,at:new Date().toISOString()};
+  delete p.done[id];
+  p.date=dk; progress[dk]=p;
+  const t2=buildPlan(viewDow).filter(i=>i.kind!=='break'&&i.kind!=='activity');
+  p.total=t2.length; p.count=t2.filter(i=>p.done[i.id]).length;
+  saveProgress(dk); renderPlan(); renderParent(); toast('改到週末了。今天先好好休息');
+}
+function undoMove(id){
+  const dk=dkey(dateForDow(viewDow)); const p=progress[dk]?clone(progress[dk]):null; if(!p||!p.moved) return;
+  delete p.moved[id]; progress[dk]=p;
+  const t2=buildPlan(viewDow).filter(i=>i.kind!=='break'&&i.kind!=='activity');
+  p.total=t2.length; p.count=t2.filter(i=>p.done[i.id]).length;
+  saveProgress(dk); renderPlan(); renderParent(); toast('放回今天了');
+}
 
 /* ---------- focus timer ---------- */
 let focus=null, wakeLock=null;
@@ -1401,6 +1473,7 @@ function weeklyText(){
     `完成率：${total?Math.round(done/total*100):0}%（${done}/${total} 項）`,
     `專注時間：${focusMin} 分鐘${leaves?`，中途離開畫面 ${leaves} 次`:''}`,
     `練習題：${atts.length?`做了 ${atts.length} 次，平均答對 ${Math.round(accAll/Math.max(1,accTot)*100)}%`:'這週還沒練習'}；錯題本還有 ${wrongList().length} 題`,
+    `自己調整：${past.reduce((a,k)=>a+Object.keys((progress[k]&&progress[k].moved)||{}).length,0)} 項改到週末`,
     `柚子：這週賺了 ${weekYuzu} 顆，現在有 ${yuzuBalance()} 顆`];
   if(scored.length) lines.push('這週成績：'+scored.map(e=>`${subj(e.sid)?.name||''}${e.title} ${e.score} 分`).join('、'));
   if(ex.length) lines.push('接下來的考試：'+ex.map(e=>`${subj(e.sid)?.name||''}${e.title}（${e.days===0?'今天':e.days+' 天後'}）`).join('、'));

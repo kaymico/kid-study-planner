@@ -8,5 +8,8 @@ services:
     restart: unless-stopped
     ports:
       - "8090:8090"
+    environment:
+      # 要用 AI 整理重點、拍照讀課表，就填上 Anthropic 的 API 金鑰（console.anthropic.com 申請）；不填也能同步
+      - ANTHROPIC_API_KEY=
     volumes:
       - ./pb_data:/pb/pb_data

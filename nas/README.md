@@ -90,6 +90,20 @@ docker/kid-planner/
 
 ---
 
+## 四、（選擇性）讓 NAS 幫忙 AI 整理重點
+
+設定之後，GitHub 網站版也能「按一下就整理好」：段考重點、拍照讀課表、拍聯絡簿、拍單字表都可以用。
+沒設定的話，網站會改用「複製指令到 AI App、再把回答貼回來」的方式，一樣能用。
+
+1. 到 https://console.anthropic.com 申請帳號，在「API Keys」建立一把金鑰（`sk-ant-` 開頭）。要先在 Billing 儲值，按用量計費。
+2. 在 NAS 打開 `docker/kid-planner/docker-compose.yml`，把 `ANTHROPIC_API_KEY=` 後面填上金鑰。
+3. Container Manager →「專案」→ kid-planner →「停止」→「建置」→「啟動」。
+4. 手機重新打開小書包，「家長同步」那一格會寫「AI 整理也由 NAS 幫忙」。
+
+金鑰只放在 NAS 上，手機和網站裡都沒有。如果想換別的 Claude 模型，可以在 `environment` 多加一行 `KP_MODEL=模型名稱`。
+
+---
+
 ## 平常要注意
 
 - **備份**：用「Hyper Backup」備份 `docker/kid-planner/pb_data` 資料夾。PocketBase 管理頁的 Settings → Backups 也可以一鍵備份。

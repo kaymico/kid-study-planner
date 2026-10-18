@@ -418,7 +418,7 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
     <div id="sync-sec" hidden>
       <div class="divider" style="margin:18px 0"></div>
       <h3>家長同步</h3>
-      <p class="muted small" id="sync-hint">接上免費的 Firebase 雲端資料庫之後，爸媽在自己的手機打開這個網站，就能看到孩子的進度。</p>
+      <p class="muted small" id="sync-hint">把資料存在家裡的群暉 NAS（或免費的 Firebase），爸媽在自己的手機打開這個網站，就能看到孩子的進度。</p>
       <div id="sync-body"></div>
     </div>
   </section>
@@ -2082,47 +2082,95 @@ $('mascot').addEventListener('click',()=>{
   m.innerHTML=capy('happy'); setTimeout(()=>{m.innerHTML=capy('normal')},900); capySay();
 });
 
-/* ---------- 3: Firebase family sync ---------- */
+/* ---------- 3: family sync (Firebase or PocketBase on a home NAS) ---------- */
 const LFB='kid-study-planner-sync';
-let fbStatus='';
+let fbStatus='', syncKind='nas';
 function fbLoad(){try{return JSON.parse(localStorage.getItem(LFB))}catch(e){return null}}
 function fbSave(v){try{v?localStorage.setItem(LFB,JSON.stringify(v)):localStorage.removeItem(LFB)}catch(e){}}
-function parseFbInput(t){
+const b64e=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o)))), b64d=t=>JSON.parse(decodeURIComponent(escape(atob(t))));
+function parseSyncCode(t){
   t=String(t||'').trim();
-  if(t.startsWith('KP1:')){try{const o=JSON.parse(decodeURIComponent(escape(atob(t.slice(4)))));if(o&&o.config&&o.family)return o}catch(e){} return null}
+  try{ if(t.startsWith('KP1:')){const o=b64d(t.slice(4)); if(o&&o.config&&o.family) return {type:'fb',...o}}
+       if(t.startsWith('KP2:')){const o=b64d(t.slice(4)); if(o&&o.url&&o.email&&o.password) return {type:'pb',...o}} }catch(e){}
   const cfg={}; t.replace(/(\w+)\s*:\s*["']([^"']+)["']/g,(m,k,v)=>{cfg[k]=v;return m});
-  return cfg.apiKey&&cfg.projectId?{config:cfg}:null;
+  return cfg.apiKey&&cfg.projectId?{type:'fb',config:cfg}:null;
 }
-function shareCode(o){return 'KP1:'+btoa(unescape(encodeURIComponent(JSON.stringify({config:o.config,family:o.family}))))}
-function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('load '+src));document.head.append(s)})}
+function shareCode(o){return o.type==='pb'?'KP2:'+b64e({url:o.url,email:o.email,password:o.password}):'KP1:'+b64e({config:o.config,family:o.family})}
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('載入失敗：'+src));document.head.append(s)})}
 async function fbConnect(o){
   if(!window.firebase){await loadScript('vendor/firebase-app-compat.js');await loadScript('vendor/firebase-auth-compat.js');await loadScript('vendor/firebase-firestore-compat.js')}
-  const app=firebase.apps.length?firebase.app():firebase.initializeApp(o.config);
+  if(!firebase.apps.length) firebase.initializeApp(o.config);
   await firebase.auth().signInAnonymously();
   const fs=firebase.firestore(), root='families/'+o.family+'/';
   return {doc:p=>fs.doc(root+p),collection:p=>fs.collection(root+p)};
 }
+// PocketBase adapter: mirrors the family's documents and exposes the same doc()/collection() shape the page uses
+async function pbConnect(o){
+  if(!window.PocketBase) await loadScript('vendor/pocketbase.umd.js');
+  const pb=new PocketBase(o.url.replace(/\/+$/,'')); pb.autoCancellation(false);
+  await pb.collection('users').authWithPassword(o.email,o.password);
+  const uid=pb.authStore.model.id, C=pb.collection('kp_docs');
+  const mirror=new Map(), docL=new Map(), colL=[];
+  const snapDoc=p=>{const m=mirror.get(p);return {id:p.split('/').pop(),exists:!!m,data:()=>m?m.data:undefined,metadata:{fromCache:false,hasPendingWrites:false}}};
+  const snapCol=prefix=>{const docs=[...mirror.entries()].filter(([k])=>k.startsWith(prefix)&&!k.slice(prefix.length).includes('/')).map(([k,m])=>({id:k.slice(prefix.length),exists:true,data:()=>m.data}));
+    return {docs,size:docs.length,empty:!docs.length,metadata:{fromCache:false,hasPendingWrites:false}}};
+  const emit=()=>{docL.forEach((set,p)=>set.forEach(cb=>cb(snapDoc(p)))); colL.forEach(l=>l.cb(snapCol(l.prefix)))};
+  const put=r=>mirror.set(r.path,{id:r.id,data:r.data,updated:r.updated});
+  const load=async()=>{const list=await C.getFullList({batch:500}); let changed=list.length!==mirror.size; const seen=new Set();
+    list.forEach(r=>{seen.add(r.path); const m=mirror.get(r.path); if(!m||m.updated!==r.updated){put(r);changed=true}});
+    [...mirror.keys()].forEach(k=>{if(!seen.has(k)){mirror.delete(k);changed=true}}); if(changed) emit()};
+  await load();
+  C.subscribe('*',e=>{ if(!e||!e.record) return; if(e.action==='delete') mirror.delete(e.record.path); else put(e.record); emit() }).catch(()=>{});
+  setInterval(()=>{ if(!document.hidden) load().catch(()=>{}) },30000);
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) load().catch(()=>{}) });
+  const esc2=v=>String(v).replace(/\\/g,'\\\\').replace(/"/g,'\\"');
+  const upsert=async(p,data)=>{
+    const m=mirror.get(p);
+    if(m){put({...(await C.update(m.id,{data})),path:p});return}
+    try{put({...(await C.create({owner:uid,path:p,data})),path:p})}
+    catch(e){const r=await C.getFirstListItem(`path = "${esc2(p)}"`); put({...(await C.update(r.id,{data})),path:p})}
+  };
+  const ref=p=>({id:p.split('/').pop(),path:p,set:d=>upsert(p,d),get:async()=>snapDoc(p),
+    delete:async()=>{const m=mirror.get(p); if(m){await C.delete(m.id).catch(()=>{}); mirror.delete(p)}},
+    onSnapshot:cb=>{if(!docL.has(p)) docL.set(p,new Set()); docL.get(p).add(cb); setTimeout(()=>cb(snapDoc(p)),0); return ()=>docL.get(p).delete(cb)}});
+  const col=c=>{const q={orderBy:()=>q,limit:()=>q,onSnapshot:cb=>{const l={prefix:c+'/',cb}; colL.push(l); setTimeout(()=>cb(snapCol(l.prefix)),0); return ()=>{const i=colL.indexOf(l); if(i>=0) colL.splice(i,1)}}}; return q};
+  return {doc:ref,collection:col};
+}
+function connectRemote(o){return o.type==='pb'?pbConnect(o):fbConnect(o)}
+let fbStopArmed=false;
 function renderSync(){
   const sec=$('sync-sec'); if(!sec) return;
   sec.hidden=!document.querySelector('link[rel="manifest"]'); if(sec.hidden) return;
   const o=fbLoad();
-  $('sync-body').innerHTML=o&&o.family?`<div class="note">${db?'已經在同步。':'正在連線……'}${fbStatus?' '+esc(fbStatus):''}</div>
-      <div class="field"><label for="fb-share">把這段「同步碼」傳給爸媽，貼到爸媽手機上的這一格就能看到一樣的資料</label><textarea id="fb-share" readonly style="min-height:70px">${esc(shareCode(o))}</textarea></div>
-      <div class="row"><button class="btn" id="fb-copy" type="button">複製同步碼</button><button class="btn ghost" id="fb-stop" type="button">${fbStopArmed?'再按一次停止同步':'停止同步'}</button></div>`
-    :`<ol class="small" style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px">
+  if(o&&(o.family||o.type==='pb')){
+    $('sync-body').innerHTML=`<div class="note">${db?'已經在同步':'正在連線……'}（${o.type==='pb'?'家裡的 NAS：'+esc(o.url):'Firebase'}）${fbStatus?'。'+esc(fbStatus):''}</div>
+      <div class="field"><label for="fb-share">把這段「同步碼」傳給爸媽，貼到爸媽手機上的這一格，就能看到一樣的資料。${o.type==='pb'?'裡面有帳號密碼，只傳給家人。':''}</label><textarea id="fb-share" readonly style="min-height:70px">${esc(shareCode(o))}</textarea></div>
+      <div class="row"><button class="btn" id="fb-copy" type="button">複製同步碼</button><button class="btn ghost" id="fb-stop" type="button">${fbStopArmed?'再按一次停止同步':'停止同步'}</button></div>`;
+    return;
+  }
+  $('sync-body').innerHTML=`<div class="row" role="group" aria-label="同步方式"><div class="seg">
+      <button type="button" class="segb" data-skind="nas" aria-pressed="${syncKind==='nas'}">家裡的群暉 NAS</button>
+      <button type="button" class="segb" data-skind="fb" aria-pressed="${syncKind==='fb'}">Firebase</button>
+      <button type="button" class="segb" data-skind="code" aria-pressed="${syncKind==='code'}">我有同步碼</button></div></div>
+    ${syncKind==='nas'?`<p class="small muted">先照 GitHub 上 <b>nas/README.md</b> 的步驟把 NAS 設定好，再填下面三格。</p>
+      <div class="form">
+        <div class="field full"><label for="pb-url">NAS 的網址（https 開頭）</label><input id="pb-url" inputmode="url" placeholder="https://你的名字.synology.me:8443"></div>
+        <div class="field"><label for="pb-email">帳號（Email）</label><input id="pb-email" type="email" autocomplete="username" placeholder="family@home.local"></div>
+        <div class="field"><label for="pb-pw">密碼</label><input id="pb-pw" type="password" autocomplete="current-password"></div>
+      </div>`
+    :syncKind==='fb'?`<ol class="small" style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px">
         <li>用電腦打開 console.firebase.google.com，新增一個專案（免費方案就夠）。</li>
-        <li>在專案裡新增「網頁應用程式」，複製畫面上 <code>firebaseConfig</code> 那一段。</li>
-        <li>到 Authentication → 登入方式，開啟「匿名」。</li>
-        <li>到 Firestore Database 建立資料庫，在「規則」貼上：<code>rules_version='2'; service cloud.firestore { match /databases/{db}/documents { match /families/{f}/{doc=**} { allow read, write: if request.auth != null; } } }</code></li>
-        <li>把 firebaseConfig 貼在下面，按「開始同步」。爸媽的手機則貼孩子手機上的「同步碼」。</li></ol>
-      <div class="field"><label for="fb-in">貼上 firebaseConfig 或同步碼</label><textarea id="fb-in" style="min-height:90px" placeholder="apiKey: &quot;AIza...&quot;, projectId: &quot;...&quot; ……或 KP1:……"></textarea></div>
-      <div><button class="btn primary" id="fb-start" type="button">開始同步</button></div>${fbStatus?`<div class="warnbox">${esc(fbStatus)}</div>`:''}`;
+        <li>新增「網頁應用程式」，複製 <code>firebaseConfig</code> 那一段。</li>
+        <li>Authentication → 登入方式，開啟「匿名」。</li>
+        <li>建立 Firestore Database，在「規則」貼上：<code>rules_version='2'; service cloud.firestore { match /databases/{db}/documents { match /families/{f}/{doc=**} { allow read, write: if request.auth != null; } } }</code></li></ol>
+      <div class="field"><label for="fb-in">貼上 firebaseConfig</label><textarea id="fb-in" style="min-height:90px" placeholder="apiKey: &quot;AIza...&quot;, projectId: &quot;...&quot; ……"></textarea></div>`
+    :`<div class="field"><label for="fb-in">貼上孩子手機上的同步碼（KP1: 或 KP2: 開頭）</label><textarea id="fb-in" style="min-height:70px"></textarea></div>`}
+    <div><button class="btn primary" id="fb-start" type="button">開始同步</button></div>${fbStatus?`<div class="warnbox">${esc(fbStatus)}</div>`:''}`;
 }
-let fbStopArmed=false;
 async function startSync(o,first){
   fbStatus=''; renderSync();
   try{
-    const d=await fbConnect(o);
+    const d=await connectRemote(o);
     if(first){
       const remote=await d.doc('planner/main').get();
       if(!remote.exists){ await d.doc('planner/main').set(clone(main));
@@ -2133,16 +2181,31 @@ async function startSync(o,first){
       } else toast('雲端已經有資料，改用雲端的資料');
     }
     connectStore(d,true); renderSync(); renderBackupHint();
-  }catch(e){ fbStatus='連不上：'+((e&&e.message)||'請檢查設定和網路'); db=null; renderSync() }
+  }catch(e){
+    const m=(e&&(e.message||e.status))||'';
+    fbStatus='連不上：'+(/Failed to authenticate|400/.test(String(m))?'帳號或密碼不對':String(m).includes('fetch')||e&&e.status===0?'找不到 NAS，請確認網址、HTTPS 憑證和連接埠':m||'請檢查設定和網路');
+    db=null; renderSync();
+  }
 }
 function fbLocalAuth(){try{return JSON.parse(localStorage.getItem(LAUTH))}catch(e){return null}}
 $('sync-body').addEventListener('click',e=>{
-  if(e.target.id==='fb-start'){const o=parseFbInput($('fb-in').value); if(!o){fbStatus='看不懂貼上的內容。要包含 apiKey 和 projectId，或是 KP1: 開頭的同步碼。';renderSync();return}
-    if(!o.family) o.family=(crypto.randomUUID?crypto.randomUUID():uid('f')+uid('g')).replace(/[^a-zA-Z0-9]/g,'');
+  const k=e.target.closest('[data-skind]'); if(k){syncKind=k.dataset.skind;fbStatus='';renderSync();return}
+  if(e.target.id==='fb-start'){
+    let o=null;
+    if(syncKind==='nas'){
+      const url=($('pb-url').value||'').trim(), email=($('pb-email').value||'').trim(), password=$('pb-pw').value||'';
+      if(!/^https:\/\//.test(url)&&!/^http:\/\/(localhost|127\.0\.0\.1)/.test(url)){fbStatus='網址要用 https:// 開頭，不然手機會擋掉。';renderSync();return}
+      if(!email||!password){fbStatus='請填帳號和密碼。';renderSync();return}
+      o={type:'pb',url,email,password};
+    } else {
+      o=parseSyncCode($('fb-in').value);
+      if(!o){fbStatus='看不懂貼上的內容。';renderSync();return}
+      if(o.type==='fb'&&!o.family) o.family=(crypto.randomUUID?crypto.randomUUID():uid('f')+uid('g')).replace(/[^a-zA-Z0-9]/g,'');
+    }
     fbSave(o); startSync(o,true); return}
   if(e.target.id==='fb-copy'){const t=$('fb-share').value; navigator.clipboard.writeText(t).then(()=>toast('同步碼複製好了，用 LINE 傳給爸媽')).catch(()=>{$('fb-share').select();toast('已選好，按「拷貝」')});return}
   if(e.target.id==='fb-stop'){ if(!fbStopArmed){fbStopArmed=true;renderSync();setTimeout(()=>{fbStopArmed=false;renderSync()},3000);return}
-    fbStopArmed=false; fbSave(null); toast('停止同步了，重新打開網站後生效'); setTimeout(()=>location.reload(),800)}
+    fbStopArmed=false; fbSave(null); toast('停止同步了'); setTimeout(()=>location.reload(),800)}
 });
 
 /* ---------- render ---------- */
@@ -2172,7 +2235,7 @@ if(window.claude&&window.claude.use){
   window.claude.use('user').then(async u=>{isOwner=u?await u.isOwner().catch(()=>false):false;renderLock()}).catch(()=>{});
 }else{
   loadLocalAuth(); renderLock(); renderSync();
-  const o=fbLoad(); if(o&&o.family) startSync(o,false);
+  const o=fbLoad(); if(o&&!o.type&&o.config) o.type='fb'; if(o&&(o.family||o.type==='pb')) startSync(o,false);
 }
 function connectStore(d,isFb){
     db=d; fbMode=!!isFb;

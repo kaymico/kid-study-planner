@@ -1,0 +1,12 @@
+services:
+  kid-planner-db:
+    build:
+      context: .
+      args:
+        PB_ARCH: amd64   # ARM 處理器的群暉改成 arm64
+    container_name: kid-planner-db
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./pb_data:/pb/pb_data

@@ -146,6 +146,31 @@ h2 .ic,h3 .ic{width:36px;margin:-10px 6px -6px 0}
 .kid{border:2px solid var(--line);border-radius:999px;background:var(--paper);padding:3px 12px;font-weight:700}
 .kid[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--paper)}
 .report{white-space:pre-line;font-size:14px;line-height:1.75}
+body.off-mood [data-feat="mood"]{display:none!important}
+body.off-contact [data-feat="contact"]{display:none!important}
+body.off-daily [data-feat="daily"]{display:none!important}
+body.off-shop [data-feat="shop"]{display:none!important}
+body.off-closet [data-feat="closet"]{display:none!important}
+body.off-badges [data-feat="badges"]{display:none!important}
+body.off-mock [data-feat="mock"]{display:none!important}
+body.off-math [data-feat="math"]{display:none!important}
+body.off-cards [data-feat="cards"]{display:none!important}
+body.off-custom [data-feat="custom"]{display:none!important}
+body.off-sound [data-feat="sound"]{display:none!important}
+body.off-peek [data-feat="peek"]{display:none!important}
+body.off-confetti [data-feat="confetti"]{display:none!important}
+body.off-peek .peek{display:none}
+.feats{display:flex;gap:6px;flex-wrap:wrap}
+.feat{border:2px solid var(--line);border-radius:999px;background:var(--paper);padding:3px 12px;font-size:13px;font-weight:700}
+.feat[aria-pressed="true"]{border-color:var(--primary);background:var(--primary-soft)}
+.wiz{max-width:460px;text-align:left}
+.wiz-steps{display:flex;gap:6px;justify-content:center}
+.wiz-steps i{width:28px;height:6px;border-radius:9px;background:var(--line)}
+.wiz-steps i.on{background:var(--primary)}
+.daily{display:flex;gap:12px;align-items:center;border:2px solid var(--primary);border-radius:16px;padding:10px 14px;background:var(--paper)}
+.daily .ic{width:52px}
+.daily>div{flex:1;min-width:0}
+.foot{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;font-size:13px}
 .hero{display:flex;gap:12px;align-items:flex-end;min-width:0}
 .hero .hello{min-width:0}
 .mascot{width:100px;flex:none;cursor:pointer;background:none;border:0;padding:0}
@@ -354,7 +379,7 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
   <header class="top">
     <div class="hero">
       <button class="mascot" id="mascot" type="button" aria-label="水豚豚豚，點我說話"></button>
-      <div class="friends" id="friends" aria-hidden="true"></div>
+      <div class="friends" id="friends" data-feat="badges" aria-hidden="true"></div>
       <div class="hello">
         <span class="date" id="today-label"></span>
         <h1 id="greeting">今天也一起加油！</h1>
@@ -363,7 +388,7 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
       <div class="clock" id="clock" aria-label="現在時間">--:--</div>
-      <span id="streak-chip"></span>
+      <span id="streak-chip" data-feat="badges"></span>
     </div>
   </header>
 
@@ -406,6 +431,14 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
       <div class="field"><label for="set-vacFrom">放假從哪天開始</label><input type="date" id="set-vacFrom"></div>
       <div class="field"><label for="set-vacTo">放假到哪天</label><input type="date" id="set-vacTo"></div>
     </div>
+    <div class="divider"></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="row between"><b>畫面上要顯示的功能</b>
+        <span class="row" style="gap:6px"><button class="btn ghost" type="button" id="feat-simple" style="padding:3px 12px">簡易模式</button><button class="btn ghost" type="button" id="feat-all" style="padding:3px 12px">全部打開</button></span></div>
+      <div class="feats" id="feats"></div>
+      <span class="small muted">用不到的先關掉，畫面會清爽很多，資料不會不見。</span>
+    </div>
+    <div class="row" style="gap:8px"><button class="btn ghost" type="button" id="wiz-again" style="padding:3px 12px">重新看一次設定導覽</button></div>
     <p class="muted small">計劃的排法：先寫作業。一週內有考試的科目排在最前面，越接近考試，複習時間加越多（7 天內 +10 分鐘，3 天內 +15 分鐘，明天考 +20 分鐘）。接著複習今天上過的科目、預習明天的科目，每讀兩科休息 10 分鐘，最後整理書包。有補習、才藝的時段會自動跳過，超過「最晚幾點結束」的項目會列出來，提醒你改到週末。錯題本有到期的題目時，也會排進「錯題複習」。</p>
   </section>
 
@@ -444,6 +477,7 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
       <button class="btn" type="submit">加入</button>
     </form>
     <div class="divider"></div>
+    <div data-feat="custom" style="display:flex;flex-direction:column;gap:18px">
     <h3><span class="ic" data-stk="happy" aria-hidden="true"></span>我自己的項目</h3>
     <p class="muted small">讀書以外想每天做的事，例如練琴、跑步、看課外書，也可以排進計劃、打勾賺柚子。</p>
     <ul class="rem-list" id="cust-list"></ul>
@@ -455,6 +489,7 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
         <div class="days" id="nc-days"><button type="button" class="day daypick" data-cd="1" aria-pressed="false">一</button><button type="button" class="day daypick" data-cd="2" aria-pressed="false">二</button><button type="button" class="day daypick" data-cd="3" aria-pressed="false">三</button><button type="button" class="day daypick" data-cd="4" aria-pressed="false">四</button><button type="button" class="day daypick" data-cd="5" aria-pressed="false">五</button><button type="button" class="day daypick" data-cd="6" aria-pressed="false">六</button><button type="button" class="day daypick" data-cd="0" aria-pressed="false">日</button></div></div>
       <button class="btn" type="submit">加入</button>
     </form>
+    </div>
     <div class="divider"></div>
     <div class="row between"><h3><span class="ic" data-stk="study" aria-hidden="true"></span>科目和課本版本</h3><button class="btn ghost" id="preset-subjects" hidden>放入常用科目</button></div>
     <p class="muted small">選好每一科用的是哪一家的課本（康軒、南一、翰林、南山……），整理重點的時候會照著那個版本來整理。</p>
@@ -594,6 +629,7 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
     </form>
     </div>
   </section>
+  <div class="foot muted"><button class="go" type="button" data-report="1">回報問題</button><span>小書包讀書計劃</span></div>
 </div>
 
 <div class="overlay" id="overlay" hidden>
@@ -616,7 +652,7 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
     <div class="fc-time" id="fc-time" aria-live="off">00:00</div>
     <div class="bar"><i id="fc-bar" style="width:0"></i></div>
     <p class="muted small" id="fc-note">手機放旁邊，豚豚陪你一起讀。</p>
-    <div class="sounds" id="fc-sounds"><button type="button" class="snd" data-snd="none" aria-pressed="false">安靜</button><button type="button" class="snd" data-snd="rain" aria-pressed="false">雨聲</button><button type="button" class="snd" data-snd="waves" aria-pressed="false">海浪</button><button type="button" class="snd" data-snd="fire" aria-pressed="false">營火</button><button type="button" class="snd" data-snd="white" aria-pressed="false">白噪音</button></div>
+    <div class="sounds" id="fc-sounds" data-feat="sound"><button type="button" class="snd" data-snd="none" aria-pressed="false">安靜</button><button type="button" class="snd" data-snd="rain" aria-pressed="false">雨聲</button><button type="button" class="snd" data-snd="waves" aria-pressed="false">海浪</button><button type="button" class="snd" data-snd="fire" aria-pressed="false">營火</button><button type="button" class="snd" data-snd="white" aria-pressed="false">白噪音</button></div>
     <div class="row" style="justify-content:center">
       <button class="btn" id="fc-pause" type="button">暫停</button>
       <button class="btn primary" id="fc-done" type="button">讀完了</button>
@@ -624,6 +660,7 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
     </div>
   </div>
 </div>
+<div class="overlay" id="wiz" hidden></div>
 <div class="overlay" id="mai" hidden>
   <div class="alert" role="dialog" aria-labelledby="mai-title" style="text-align:left;max-width:540px;max-height:calc(100% - 20px);overflow:auto">
     <div class="row"><span class="ic lg" data-stk="think" aria-hidden="true"></span><h2 id="mai-title" style="font-size:20px">請 AI App 幫忙</h2></div>
@@ -857,7 +894,7 @@ function renderPlan(){
     const stk=`<span class="mini" aria-hidden="true">${sticker(isDone?'happy':KIND_STICKER[it.kind]||'normal')}</span>`;
     const kind={redo:it.title,cap:it.title.split(' ').slice(1).join(' '),wrong:'錯題複習',hw:'作業',review:it.title.includes('一週')?'一週複習':'複習',preview:'預習',pack:'書包',exam:'考前複習'}[it.kind]||it.title;
     const en=it.exam&&noteForExam(it.exam.id);
-    const mockOk=it.exam&&it.exam.days<=3&&mockCandidates().some(c=>c.e.id===it.exam.id);
+    const mockOk=!featOff('mock')&&it.exam&&it.exam.days<=3&&mockCandidates().some(c=>c.e.id===it.exam.id);
     const practice=mockOk?`<button class="go" data-mockstart="${it.exam.id}">做模擬考 →</button>`:en?`<button class="go" data-opennote="${en}">看段考重點、做模擬題 →</button>`
       :it.exam?`<button class="go" data-examnote="${it.exam.id}">幫我整理這次考試的重點 →</button>`
       :it.kind==='wrong'?`<button class="go" data-wrongstart="1">開始錯題複習 →</button>`
@@ -875,6 +912,7 @@ function renderPlan(){
   const total=tasks.length, pct=total?nDone/total:0, starN=Math.round(pct*5);
   $('plan-body').innerHTML=`<div style="display:flex;flex-direction:column;gap:14px">
     ${isToday?moodHTML(dk):''}
+    ${isToday?dailyHTML(dk):''}
     ${isToday&&viewDow>=1&&viewDow<=5?contactHTML(dk):''}
     <div class="progress"><span class="stars">${'★'.repeat(starN)}<span class="off">${'★'.repeat(5-starN)}</span></span>
       <div class="trail" aria-hidden="true"><div class="track"><i style="width:${pct*100}%"></i></div><div class="walker" style="left:calc(23px + (100% - 53px) * ${pct})">${capy(pct===1?'happy':'normal')}</div><span class="onsen">♨</span></div>
@@ -1120,11 +1158,11 @@ function renderNotes(){
     <p class="muted small">AI 會照著年級和課本版本整理重點，再出 5 題選擇題。打上或拍下課本內容會最準；沒有提供的話，它只能依課綱和常見教材來整理，內容請爸媽或老師幫忙看一下。</p>`
     :`<div class="note">AI 整理重點要在 Claude 裡打開這一頁才能用。已經整理好的重點和練習題還是可以看、可以練習。</div>`}
     <div class="divider"></div>
-    ${mockCandidates().map(c=>`<div class="bag" style="border-color:var(--bad)"><div class="row between"><div><div class="label"><span class="ic" data-stk="cheer" aria-hidden="true"></span>模擬考</div><b style="font-family:var(--f-display);font-size:18px">${esc(subj(c.e.sid).name)} ${esc(c.e.title)}（${c.e.days===0?'今天':c.e.days+' 天後'}）</b>
+    ${mockCandidates().map(c=>`<div class="bag" data-feat="mock" style="border-color:var(--bad)"><div class="row between"><div><div class="label"><span class="ic" data-stk="cheer" aria-hidden="true"></span>模擬考</div><b style="font-family:var(--f-display);font-size:18px">${esc(subj(c.e.sid).name)} ${esc(c.e.title)}（${c.e.days===0?'今天':c.e.days+' 天後'}）</b>
       <div class="small muted">從這一科的練習題抽 ${Math.min(20,c.items.length)} 題，限時作答，像真的考試一樣。</div></div><button class="btn primary" data-mock="${c.e.id}">開始模擬考</button></div></div>`).join('')}
-    <div class="bag"><div class="label"><span class="ic" data-stk="think" aria-hidden="true"></span>數學無限練習（國二上）</div><span class="small muted">程式自動出題，每次數字都不一樣，不用網路也能練。答錯的會進錯題本。</span>
+    <div class="bag" data-feat="math"><div class="label"><span class="ic" data-stk="think" aria-hidden="true"></span>數學無限練習（國二上）</div><span class="small muted">程式自動出題，每次數字都不一樣，不用網路也能練。答錯的會進錯題本。</span>
       <div class="units">${MATH_UNITS.map(u=>`<button class="unit-btn" data-mathgen="${u.id}">${u.name}</button>`).join('')}</div></div>
-    <div class="bag"><div class="label"><span class="ic" data-stk="study" aria-hidden="true"></span>字卡（英文單字、國文注釋、生物名詞……）</div>
+    <div class="bag" data-feat="cards"><div class="label"><span class="ic" data-stk="study" aria-hidden="true"></span>字卡（英文單字、國文注釋、生物名詞……）</div>
       <form class="form" id="vocab-form">
         <div class="field"><label for="vc-subj">科目</label><select id="vc-subj">${main.subjects.filter(x=>x.study).map(x=>`<option value="${x.id}"${x.id===(drafts['vc-subj']||(main.subjects.find(y=>/英/.test(y.name))||{}).id)?' selected':''}>${esc(x.name)}</option>`).join('')}</select></div>
         <div class="field"><label for="vc-title">哪一課</label><input id="vc-title" maxlength="20" placeholder="例如：翰林 L3" value="${esc(drafts['vc-title']||'')}" required></div>
@@ -1200,13 +1238,14 @@ function renderQuiz(v){
       <p class="muted">${quiz.review?(quiz.cleared?`有 ${quiz.cleared} 題從錯題本畢業了！`:'')+`錯題本還有 ${wrongList().length} 題。`
         :quiz.score===total?'全部答對，太厲害了！':quiz.score>=total*0.6?'很不錯！答錯的題目已經放進錯題本，明天再練一次。':'沒關係，答錯的題目放進錯題本了，明天再練。'}</p>
       <p class="row small muted" style="justify-content:center;gap:4px">${yuzu(18)} 這次得到 ${got} 顆柚子</p>
+      ${quiz.daily?'<p class="small muted">今天的小測驗完成了！明天再來 5 題。</p>':''}
       ${quiz.mock?`<p class="small muted">模擬考成績記下來了，${quiz.score/Math.max(1,total)>=0.8?'準備得很好！':'錯的題目都進錯題本了，考前再複習一次。'}</p>`:''}
-      <div class="row" style="justify-content:center">${quiz.review||quiz.mock?'':'<button class="btn primary" id="q-again">再練一次</button>'}<button class="btn ghost" id="q-exit">${quiz.review?'回到重點練習':'看重點'}</button></div></div>`;
+      <div class="row" style="justify-content:center">${quiz.review||quiz.mock||quiz.daily?'':'<button class="btn primary" id="q-again">再練一次</button>'}<button class="btn ghost" id="q-exit">${quiz.review?'回到重點練習':'看重點'}</button></div></div>`;
     return;
   }
   const {q,n}=cur, s=subj(n.sid), L='ABCD';
   v.innerHTML=`<div class="quiz">
-    <div class="row between"><span class="label">${quiz.review?'錯題複習・':quiz.mock?'模擬考・':quiz.genUnit?esc(quiz.title)+'・':''}第 ${quiz.i+1} 題 / 共 ${total} 題</span><span class="small muted">${quiz.mock?`剩下 <b id="mock-left">${mockLeft()}</b>`:`答對 ${quiz.score} 題`}</span></div>
+    <div class="row between"><span class="label">${quiz.daily?'每日小測驗・':quiz.review?'錯題複習・':quiz.mock?'模擬考・':quiz.genUnit?esc(quiz.title)+'・':''}第 ${quiz.i+1} 題 / 共 ${total} 題</span><span class="small muted">${quiz.mock?`剩下 <b id="mock-left">${mockLeft()}</b>`:`答對 ${quiz.score} 題`}</span></div>
     ${quiz.review?`<div class="row">${s?`<span class="subj" style="--h:${s.h}">${esc(s.name)}</span>`:''}<span class="small muted">${esc(n.title||n.unit||'')}</span></div>`:''}
     <div class="q">${esc(q.q)}</div>
     <div class="opts">${q.options.map((o,i)=>{
@@ -1269,7 +1308,7 @@ $('panel-notes').addEventListener('click',e=>{
     const nn=clone(cur.n); nn.wrong=nn.wrong||{}; const key=String(cur.it.qi), w=nn.wrong[key];
     let changed=false;
     if(!ok){nn.wrong[key]={stage:0,due:addDays(todayKey(),1)};changed=true}
-    else if(quiz.review){
+    else if(quiz.review||cur.it.rv){
       nn.reviewOk=(nn.reviewOk||0)+1; changed=true;
       if(w&&(w.stage||0)>=2){delete nn.wrong[key];nn.cleared=(nn.cleared||0)+1;quiz.cleared++}
       else if(w) nn.wrong[key]={stage:(w.stage||0)+1,due:addDays(todayKey(),(w.stage||0)===0?3:7)};
@@ -1280,6 +1319,7 @@ $('panel-notes').addEventListener('click',e=>{
   if(t.id==='q-next'){
     quiz.i++; quiz.picked=null;
     if(quiz.i>=quiz.items.length&&quiz.mock) finishMock();
+    if(quiz.i>=quiz.items.length&&quiz.daily) finishDaily();
     if(quiz.i>=quiz.items.length&&!quiz.review&&!quiz.mock&&notes[quiz.nid0]){
       const nn=clone(notes[quiz.nid0]); nn.attempts=(nn.attempts||[]).concat({at:new Date().toISOString(),score:quiz.score,total:quiz.items.length}).slice(-20);
       notes[quiz.nid0]=nn; if(!readOnly) saveNote(quiz.nid0);
@@ -1613,6 +1653,7 @@ function toast(msg){
   if(/全部完成|全部拼對|全部答對|畢業|徽章/.test(msg)) confetti();
 }
 function confetti(){
+  if(featOff('confetti')) return;
   if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   for(let i=0;i<16;i++){const el=document.createElement('span'); el.className='confetti'; el.innerHTML=i%4===0?sticker('happy'):yuzu(28);
     el.style.left=(Math.random()*92+2)+'vw'; el.style.animationDuration=(1.8+Math.random()*1.6)+'s'; el.style.animationDelay=(Math.random()*.6)+'s';
@@ -1681,6 +1722,120 @@ $('mai-ok').addEventListener('click',()=>{
 $('mai-cancel').addEventListener('click',()=>{$('mai').hidden=true; const r=maiReject; maiResolve=maiReject=null; r&&r({code:'cancelled'})});
 const manualBtn=(id,label)=>`<button class="btn ghost" type="button" id="${id}" style="padding:4px 12px">${label}</button>`;
 
+/* ---------- 2: daily 5-minute quiz ---------- */
+function dailyItems(){
+  const due=wrongDue().slice(0,3).map(x=>({...x,rv:true}));
+  const pool=noteList().filter(n=>!n.auto).flatMap(n=>(n.questions||[]).map((_,qi)=>({nid:n.id,qi})))
+    .filter(x=>!due.some(d=>d.nid===x.nid&&d.qi===x.qi)).sort(()=>Math.random()-.5);
+  const items=[...due,...pool.slice(0,5-due.length)];
+  while(items.length<5){const u=PICK(MATH_UNITS); items.push({gen:true,q:u.gen()})}
+  return items.slice(0,5);
+}
+function startDaily(){
+  if(!notes.mathgen){notes.mathgen={sid:mathSid(),title:'數學自動練習',unit:'自動出題（錯題會留在這裡）',points:['這裡收的是自動出題時答錯的題目，會一起進錯題本。'],questions:[],attempts:[],createdAt:new Date().toISOString(),auto:true}; saveNote('mathgen')}
+  quiz={daily:true,title:'每日小測驗',items:dailyItems(),i:0,score:0,cleared:0,picked:null};
+  openNote=null; keepQuiz=true; showTab('notes');
+}
+function finishDaily(){ if(!quiz||!quiz.daily||quiz.dailySaved) return; quiz.dailySaved=true; const q=quiz;
+  editProgress(todayKey(),p=>{p.daily={score:q.score,total:q.items.length,at:new Date().toISOString()}}); renderPlan(); renderParent(); checkNewBadges() }
+function dailyHTML(dk){
+  const d=progress[dk]&&progress[dk].daily;
+  return `<div class="daily" data-feat="daily"><span class="ic" data-stk="${d?'happy':'think'}" aria-hidden="true"></span>
+    <div><b style="font-family:var(--f-display);font-size:18px">每日 5 分鐘小測驗</b>
+      <div class="small muted">${d?`今天答對 ${d.score} / ${d.total} 題，明天再來！`:'從錯題、字卡和練習題裡混出 5 題，答完就收工。'}</div></div>
+    ${d?'':'<button class="btn primary" id="daily-start" type="button">開始</button>'}</div>`;
+}
+
+/* ---------- 1: feature switches + first-run guide ---------- */
+const FEATS=[["mood", "心情打卡"], ["contact", "聯絡簿"], ["daily", "每日小測驗"], ["shop", "柚子和獎勵"], ["closet", "豚豚衣櫃"], ["badges", "徽章和連續天數"], ["mock", "模擬考"], ["math", "數學自動出題"], ["cards", "字卡"], ["custom", "自己的項目"], ["sound", "專注背景聲"], ["peek", "探頭的豚豚"], ["confetti", "柚子雨"]];
+const SIMPLE_OFF=['closet','badges','mock','math','custom','sound','peek','confetti'];
+const featOff=k=>!!(main.settings.off||[]).includes(k);
+function applyFeatures(){
+  FEATS.forEach(([k])=>document.body.classList.toggle('off-'+k,featOff(k)));
+  $('feats').innerHTML=FEATS.map(([k,l])=>`<button type="button" class="feat" data-feat-toggle="${k}" aria-pressed="${!featOff(k)}">${l}</button>`).join('');
+}
+$('feats').addEventListener('click',e=>{const b=e.target.closest('[data-feat-toggle]'); if(!b) return; const k=b.dataset.featToggle, off=new Set(main.settings.off||[]);
+  off.has(k)?off.delete(k):off.add(k); main.settings.off=[...off]; saveMain()});
+$('feat-simple').addEventListener('click',()=>{main.settings.off=SIMPLE_OFF.slice(); saveMain(); toast('換成簡易模式了，只留最常用的')});
+$('feat-all').addEventListener('click',()=>{main.settings.off=[]; saveMain(); toast('全部功能都打開了')});
+
+let wizStep=0, wizDays=new Set();
+function wizHTML(){
+  const st=main.school, steps=5;
+  const dots=`<div class="wiz-steps">${[...Array(steps)].map((_,i)=>`<i class="${i<=wizStep?'on':''}"></i>`).join('')}</div>`;
+  const nav=(next,label)=>`<div class="row" style="justify-content:space-between">${wizStep?'<button class="btn ghost" type="button" data-wiz="back">上一步</button>':'<button class="btn ghost" type="button" data-wiz="skip">先跳過</button>'}<button class="btn primary" type="button" data-wiz="${next}">${label||'下一步'}</button></div>`;
+  const kname=(kids.find(k=>k.id===KID)||{}).name||'';
+  let body='';
+  if(wizStep===0) body=`<div class="row"><span class="ic lg" data-stk="happy"></span><h2 style="font-size:22px">嗨！我是豚豚</h2></div>
+    <p>花 3 分鐘把基本資料填好，我就能幫你排每天的讀書計劃。</p>
+    <div class="field"><label for="wz-name">你的名字（或暱稱）</label><input id="wz-name" maxlength="10" value="${esc(kname)}" placeholder="例如：晴晴"></div>
+    <div class="form"><div class="field"><label for="wz-grade">年級</label><select id="wz-grade">${['一年級','二年級','三年級','四年級','五年級','六年級','國一','國二','國三'].map(g=>`<option${g===st.grade?' selected':''}>${g}</option>`).join('')}</select></div>
+    <div class="field"><label for="wz-term">學期</label><select id="wz-term"><option value="上"${st.term!=='下'?' selected':''}>上學期</option><option value="下"${st.term==='下'?' selected':''}>下學期</option></select></div></div>`+nav('next');
+  if(wizStep===1){ if(!main.subjects.length) main.subjects=clone(isJH()?PRESET_JH:PRESET);
+    body=`<div class="row"><span class="ic lg" data-stk="study"></span><h2 style="font-size:22px">科目和課本版本</h2></div>
+    <p class="small muted">已經幫你放好常用科目。每一科填上課本版本（例如康軒、翰林），整理重點時會更準。</p>
+    <div style="display:flex;flex-direction:column;gap:6px">${main.subjects.filter(x=>x.study).map(x=>`<div class="row"><span class="subj" style="--h:${x.h};min-width:56px">${esc(x.name)}</span><input class="inline-input" list="publishers" data-wzpub="${x.id}" value="${esc(x.publisher||'')}" placeholder="哪一版？" style="flex:1;min-width:0"></div>`).join('')}</div>`+nav('next');}
+  if(wizStep===2) body=`<div class="row"><span class="ic lg" data-stk="write"></span><h2 style="font-size:22px">課表</h2></div>
+    <p>課表可以拍照讓 AI 讀，也可以自己點格子填。按「下一步」之後，最後會帶你到課表頁面。</p>
+    <p class="small muted">拍照讀課表在「課表與課本」最上面；在 GitHub 網站版會請你把指令貼到 AI App。</p>`+nav('next');
+  if(wizStep===3) body=`<div class="row"><span class="ic lg" data-stk="bag"></span><h2 style="font-size:22px">有補習或才藝嗎？</h2></div>
+    <p class="small muted">有的話填一個就好，之後可以再加。沒有就直接按下一步。</p>
+    <div class="field"><label for="wz-act">名稱</label><input id="wz-act" maxlength="12" placeholder="例如：數學補習"></div>
+    <div class="form"><div class="field"><label for="wz-as">開始</label><input type="time" id="wz-as" value="19:00"></div><div class="field"><label for="wz-ae">結束</label><input type="time" id="wz-ae" value="21:00"></div></div>
+    <div class="days">${[[1,'一'],[2,'二'],[3,'三'],[4,'四'],[5,'五'],[6,'六'],[0,'日']].map(([d,w])=>`<button type="button" class="day daypick" data-wzd="${d}" aria-pressed="${wizDays.has(d)}">${w}</button>`).join('')}</div>`+nav('next');
+  if(wizStep===4) body=`<div class="row"><span class="ic lg" data-stk="cheer"></span><h2 style="font-size:22px">要哪一種畫面？</h2></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn ${ (main.settings.off||[]).length?'primary':'ghost'}" type="button" data-wiz="simple" style="text-align:left">簡易模式：只有計劃、課表、考試、重點練習</button>
+      <button class="btn ${ (main.settings.off||[]).length?'ghost':'primary'}" type="button" data-wiz="full" style="text-align:left">完整模式：柚子、衣櫃、徽章、模擬考都打開</button>
+    </div><p class="small muted">之後在「今日計劃」最下面隨時可以改。</p>`+nav('done','完成，去填課表');
+  return `<div class="alert wiz" role="dialog" aria-label="設定導覽">${dots}${body}</div>`;
+}
+function openWiz(step){wizStep=step||0; $('wiz').innerHTML=wizHTML(); $('wiz').hidden=false}
+function wizSave(){
+  if(wizStep===0){const n=($('wz-name').value||'').trim(); const k=kids.find(x=>x.id===KID); if(k&&n){k.name=n; saveKids()} main.school.grade=$('wz-grade').value; main.school.term=$('wz-term').value}
+  if(wizStep===1) document.querySelectorAll('[data-wzpub]').forEach(i=>{const x=subj(i.dataset.wzpub); if(x) x.publisher=i.value.trim()});
+  if(wizStep===3){const n=($('wz-act').value||'').trim(); if(n&&wizDays.size&&toMin($('wz-ae').value)>toMin($('wz-as').value)) main.activities.push({id:uid('a'),name:n,start:$('wz-as').value,end:$('wz-ae').value,days:[...wizDays]}); wizDays=new Set()}
+}
+$('wiz').addEventListener('click',e=>{
+  const d=e.target.closest('[data-wzd]'); if(d){const v=+d.dataset.wzd; wizDays.has(v)?wizDays.delete(v):wizDays.add(v); d.setAttribute('aria-pressed',wizDays.has(v)); return}
+  const b=e.target.closest('[data-wiz]'); if(!b) return; const a=b.dataset.wiz;
+  if(a==='simple'||a==='full'){main.settings.off=a==='simple'?SIMPLE_OFF.slice():[]; $('wiz').innerHTML=wizHTML(); return}
+  if(a==='back'){wizStep=Math.max(0,wizStep-1); $('wiz').innerHTML=wizHTML(); return}
+  if(a==='skip'){main.settings.onboarded=true; $('wiz').hidden=true; saveMain(); return}
+  wizSave();
+  if(a==='next'){wizStep++; $('wiz').innerHTML=wizHTML(); return}
+  if(a==='done'){main.settings.onboarded=true; $('wiz').hidden=true; saveMain(); showTab('tt'); toast('設定好了！接著把課表填上吧')}
+});
+$('wiz-again').addEventListener('click',()=>openWiz(0));
+
+/* ---------- 3: problem report ---------- */
+const APP_VERSION='2026.10.18-14';
+const recentErrors=[];
+window.addEventListener('error',e=>{recentErrors.push((e.message||'error')+' @'+(e.lineno||'?')); if(recentErrors.length>5) recentErrors.shift()});
+window.addEventListener('unhandledrejection',e=>{const r=e.reason; recentErrors.push('promise: '+((r&&(r.message||r.code))||String(r))); if(recentErrors.length>5) recentErrors.shift()});
+function reportText(what){
+  const tab=(document.querySelector('.tab[aria-selected="true"]')||{}).dataset||{};
+  return ['【小書包問題回報】', '發生什麼事：'+(what||'（沒有填）'), '',
+    '版本：'+APP_VERSION, '畫面：'+(tab.tab||'?')+(openNote?'・筆記':'')+(quiz?'・練習中':''),
+    '版本類型：'+(document.querySelector('link[rel="manifest"]')?'GitHub 網站':'Claude 連結')+'・AI：'+aiMode()+'・同步：'+(db?(fbMode?'NAS/Firebase':'Claude'):'只在這台'),
+    '資料：科目 '+main.subjects.length+'、考試 '+main.exams.length+'、筆記 '+Object.keys(notes).length+'、天數 '+Object.keys(progress).length,
+    '裝置：'+navigator.userAgent.slice(0,160), '螢幕：'+innerWidth+'×'+innerHeight,
+    '最近的錯誤：'+(recentErrors.length?recentErrors.join(' ／ '):'沒有')].join('\n');
+}
+function openReport(){
+  $('wiz').innerHTML=`<div class="alert wiz" role="dialog" aria-label="回報問題"><div class="row"><span class="ic lg" data-stk="think"></span><h2 style="font-size:22px">回報問題</h2></div>
+    <div class="field"><label for="rp-what">發生什麼事？在哪個畫面、按了什麼？</label><textarea id="rp-what" class="inline-input" style="min-height:90px" placeholder="例如：在重點練習按「開始模擬考」，畫面沒有反應"></textarea></div>
+    <p class="small muted">按「複製回報」會連同版本和裝置資訊一起複製，貼給 Claude 就能直接修。不會包含課表內容或密碼。</p>
+    <div class="row" style="justify-content:space-between"><button class="btn ghost" type="button" id="rp-close">關掉</button><button class="btn primary" type="button" id="rp-copy">複製回報</button></div></div>`;
+  $('wiz').hidden=false;
+}
+$('wiz').addEventListener('click',e=>{
+  if(e.target.id==='rp-close'){$('wiz').hidden=true;return}
+  if(e.target.id==='rp-copy'){const t=reportText(($('rp-what').value||'').trim());
+    navigator.clipboard.writeText(t).then(()=>{toast('回報複製好了，貼給 Claude 吧');$('wiz').hidden=true}).catch(()=>{$('rp-what').value=t;$('rp-what').select();toast('已選好，按「拷貝」')})}
+});
+document.addEventListener('click',e=>{ if(e.target.closest('[data-report]')) openReport(); if(e.target.id==='daily-start') startDaily() });
+
 /* ---------- progress helper ---------- */
 function editProgress(dk,fn){
   const p=progress[dk]?clone(progress[dk]):{date:dk,done:{}}; p.date=dk; fn(p);
@@ -1695,8 +1850,8 @@ const MOODS=[['good','狀態不錯','happy'],['ok','普普通通','normal'],['ti
 function moodHTML(dk){
   const m=progress[dk]&&progress[dk].mood;
   if(m&&!moodEdit){const x=MOODS.find(y=>y[0]===m)||MOODS[1];
-    return `<div class="mood"><div class="capy" style="width:46px">${sticker(x[2])}</div><span>今天：<b>${x[1].replace('今天','')}</b>${m==='tired'?'，預習先跳過，作業和複習照常':''}</span><button class="go" id="mood-edit">改一下</button></div>`}
-  return `<div class="mood"><b style="font-family:var(--f-display);font-size:18px">今天感覺怎麼樣？</b><div class="row">${MOODS.map(x=>`<button class="mood-btn" data-mood="${x[0]}" aria-pressed="${m===x[0]}"><span class="capy">${sticker(x[2])}</span>${x[1]}</button>`).join('')}</div></div>`;
+    return `<div class="mood" data-feat="mood"><div class="capy" style="width:46px">${sticker(x[2])}</div><span>今天：<b>${x[1].replace('今天','')}</b>${m==='tired'?'，預習先跳過，作業和複習照常':''}</span><button class="go" id="mood-edit">改一下</button></div>`}
+  return `<div class="mood" data-feat="mood"><b style="font-family:var(--f-display);font-size:18px">今天感覺怎麼樣？</b><div class="row">${MOODS.map(x=>`<button class="mood-btn" data-mood="${x[0]}" aria-pressed="${m===x[0]}"><span class="capy">${sticker(x[2])}</span>${x[1]}</button>`).join('')}</div></div>`;
 }
 let moodEdit=false;
 
@@ -1705,7 +1860,7 @@ let contactGen=false, contactPreview=null;
 function contactHTML(dk){
   const c=(progress[dk]&&progress[dk].contact)||{hw:[],bring:[],notes:[]};
   const pv=contactPreview;
-  return `<div class="contact">
+  return `<div class="contact" data-feat="contact">
     <div class="row between"><div class="label"><span class="ic" data-stk="write" aria-hidden="true"></span>今天的聯絡簿</div>
       ${!aiImg()?manualBtn('cb-manual',contactGen?'正在等 AI……':'用 AI 讀聯絡簿'):`<label class="btn ghost" for="cb-photo" style="padding:4px 12px;cursor:pointer">${contactGen?'正在讀聯絡簿……':'拍聯絡簿'}</label><input type="file" id="cb-photo" accept="image/*" hidden ${contactGen?'disabled':''}>`}</div>
     ${pv?`<div class="warnbox" style="display:flex;flex-direction:column;gap:6px"><b>讀到的內容，確認一下</b>
@@ -1761,7 +1916,7 @@ function accSVG(){
 }
 function closetHTML(){
   const c=main.closet||{owned:[],wearing:''}, bal=yuzuBalance();
-  return `<div><div class="label" style="margin-bottom:6px"><span class="ic" data-stk="happy" aria-hidden="true"></span>豚豚衣櫃</div><div class="closet">${CLOSET.map(([k,name,cost])=>{
+  return `<div data-feat="closet"><div class="label" style="margin-bottom:6px"><span class="ic" data-stk="happy" aria-hidden="true"></span>豚豚衣櫃</div><div class="closet">${CLOSET.map(([k,name,cost])=>{
     const own=(c.owned||[]).includes(k), wear=c.wearing===k;
     const prev=main.closet; main.closet={...c,wearing:k}; const img=sticker('normal'); main.closet=prev;
     return `<div class="cl-item${wear?' wearing':''}"><span class="capy">${img}</span><span>${name}</span>
@@ -2119,7 +2274,7 @@ function renderExamScores(){
 /* ---------- yuzu points ---------- */
 const yuzu=(n=22)=>`<svg width="${n}" height="${n}" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13.5" r="9" fill="var(--sun)"/><circle cx="9" cy="11" r="2" fill="#fff" opacity=".35"/><path d="M12 5q4-5 9-2q-4 4-9 2z" fill="var(--leaf)"/></svg>`;
 function yuzuEarned(){
-  let n=0; Object.values(progress).forEach(p=>{n+=+(p&&p.count)||0; ((p&&p.mocks)||[]).forEach(m=>{n+=+m.score||0}); ((p&&p.contact&&p.contact.hw)||[]).forEach(h=>{if(h.done)n+=1})});
+  let n=0; Object.values(progress).forEach(p=>{n+=+(p&&p.count)||0; ((p&&p.mocks)||[]).forEach(m=>{n+=+m.score||0}); n+=+(p&&p.daily&&p.daily.score)||0; ((p&&p.contact&&p.contact.hw)||[]).forEach(h=>{if(h.done)n+=1})});
   Object.values(notes).forEach(x=>{(x.attempts||[]).forEach(a=>{n+=+a.score||0}); n+=(+x.reviewOk||0)+(+x.cleared||0)*2});
   return n;
 }
@@ -2128,7 +2283,7 @@ function yuzuBalance(){return Math.max(0,yuzuEarned()-yuzuSpent())}
 let redeemArmed=null;
 function shopHTML(){
   const bal=yuzuBalance(), pend=main.redemptions.filter(r=>r.status==='pending');
-  return `<div class="shop">
+  return `<div class="shop" data-feat="shop">
     <div class="row between"><div class="row" style="gap:8px">${yuzu(30)}<b class="pts">${bal}</b><span class="small muted">顆柚子</span></div>
       <span class="small muted">完成一項 +1・練習答對 +1・錯題畢業 +2</span></div>
     ${main.rewards.length?`<div class="rewards">${main.rewards.map(r=>`<div class="reward"><span>${esc(r.name)}</span>
@@ -2201,7 +2356,7 @@ function checkNewBadges(){
 }
 function badgesHTML(){
   const got=earnedBadges();
-  return `<div><div class="label" style="margin-bottom:6px"><span class="ic" data-stk="cheer" aria-hidden="true"></span>成就徽章 ${got.length} / ${BADGES.length}</div><div class="badges">${BADGES.map(([k,n,d,stk])=>
+  return `<div data-feat="badges"><div class="label" style="margin-bottom:6px"><span class="ic" data-stk="cheer" aria-hidden="true"></span>成就徽章 ${got.length} / ${BADGES.length}</div><div class="badges">${BADGES.map(([k,n,d,stk])=>
     `<div class="badge${got.includes(k)?'':' locked'}" title="${esc(d)}"><span class="ic" data-stk="${stk}" aria-hidden="true"></span><b>${n}</b><span class="muted">${d}</span></div>`).join('')}</div></div>`;
 }
 function renderStreak(){
@@ -2629,9 +2784,10 @@ function renderHeader(){
   $('example-banner').hidden=!main.isExample;
   ['start','hw','review','preview','bedtime','vacFrom','vacTo'].forEach(k=>setVal('set-'+k,main.settings[k]||''));
 }
-function renderAll(){fillStickers(document,true);renderHeader();renderStreak();renderKids();checkNewBadges();renderPlan();renderTT();if(!quiz&&!flash&&!spell)renderNotes();renderRem();renderParent()}
+function renderAll(){applyFeatures();fillStickers(document,true);renderHeader();renderStreak();renderKids();checkNewBadges();renderPlan();renderTT();if(!quiz&&!flash&&!spell)renderNotes();renderRem();renderParent()}
 
 setFormDefaults(); renderAll(); tick(); renderLock();
+setTimeout(()=>{ if(!main.settings.onboarded&&!main.subjects.length&&!main.isExample&&$('wiz').hidden&&(!window.claude||synced)) openWiz(0) },1200);
 
 /* ---------- connect shared storage and Claude when the viewer offers them ---------- */
 if(window.claude&&window.claude.use){

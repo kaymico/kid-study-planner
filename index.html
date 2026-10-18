@@ -1,0 +1,1242 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1C2742">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>小書包讀書計劃</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: a contact-book (聯絡簿) page on grid paper — tabs on top, one working panel below */
+:root{
+  --bg:#EEF3F9; --grid:#DCE5F0; --paper:#FFFFFF; --ink:#1C2742; --muted:#5A6884; --line:#D3DCE8;
+  --primary:#2C62D6; --primary-ink:#FFFFFF; --primary-soft:#E3ECFC;
+  --sun:#FFC53A; --sun-ink:#3F2E00; --sun-soft:#FFF4D6;
+  --ok:#18915A; --ok-soft:#DDF3E8; --warn:#C25E00; --bad:#C8323C; --bad-soft:#FBE3E4;
+  --chip-l:89%; --chip-ink-l:26%; --shadow:0 1px 0 rgba(28,39,66,.06),0 6px 20px -10px rgba(28,39,66,.25);
+  --f-display:"LXGW WenKai TC","Kaiti TC","STKaiti","KaiTi",serif;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121827; --grid:#1B2337; --paper:#1A2235; --ink:#E8EDF7; --muted:#9AA7C0; --line:#2C3650;
+  --primary:#7FA6FF; --primary-ink:#0E1630; --primary-soft:#22305A;
+  --sun:#FFCF5C; --sun-ink:#2A1E00; --sun-soft:#3A3019;
+  --ok:#5BD49A; --ok-soft:#173A2B; --warn:#FFAA55; --bad:#FF8A8F; --bad-soft:#4A1F25;
+  --chip-l:30%; --chip-ink-l:88%; --shadow:0 1px 0 rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.6);
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121827; --grid:#1B2337; --paper:#1A2235; --ink:#E8EDF7; --muted:#9AA7C0; --line:#2C3650;
+  --primary:#7FA6FF; --primary-ink:#0E1630; --primary-soft:#22305A;
+  --sun:#FFCF5C; --sun-ink:#2A1E00; --sun-soft:#3A3019;
+  --ok:#5BD49A; --ok-soft:#173A2B; --warn:#FFAA55; --bad:#FF8A8F; --bad-soft:#4A1F25;
+  --chip-l:30%; --chip-ink-l:88%; --shadow:0 1px 0 rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.6);
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--f-body); font-size:15px; line-height:1.6;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;
+}
+.wrap{max-width:900px;margin:0 auto;padding-block:20px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;font-weight:700}
+h1{font-size:30px;line-height:1.2}
+h2{font-size:22px}
+h3{font-size:18px}
+p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.5}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+
+header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.hello{display:flex;flex-direction:column;gap:2px;min-width:0}
+.date{font-size:13px;color:var(--muted);letter-spacing:.06em}
+.clock{font-family:var(--f-display);font-size:28px;font-variant-numeric:tabular-nums;background:var(--paper);
+  border:2px solid var(--ink);border-radius:12px;padding:2px 14px;box-shadow:3px 3px 0 var(--ink)}
+.banner{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--sun-soft);border:2px dashed var(--sun-ink);border-radius:14px;padding:10px 14px;font-size:14px}
+.banner b{font-family:var(--f-display);font-size:16px}
+
+nav.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{border:2px solid var(--ink);background:var(--paper);border-radius:999px;padding:6px 14px;font-weight:700;font-size:15px}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.tab.parent{border-style:dashed}
+
+.panel{background:var(--paper);border:2px solid var(--ink);border-radius:18px;box-shadow:var(--shadow);
+  padding:20px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.between{justify-content:space-between}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.label{font-size:12px;letter-spacing:.12em;color:var(--muted);font-weight:700}
+.empty{border:2px dashed var(--line);border-radius:14px;padding:18px;text-align:center;color:var(--muted);display:flex;flex-direction:column;gap:10px;align-items:center}
+
+/* parent message */
+.msg{display:flex;gap:12px;align-items:flex-start;background:var(--primary-soft);border-radius:14px;padding:12px 14px}
+.msg .who{font-size:12px;font-weight:700;color:var(--primary);letter-spacing:.08em}
+.msg .text{font-family:var(--f-display);font-size:18px;line-height:1.4}
+.msg>div{flex:1;min-width:0}
+
+/* exam countdown */
+.exams{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.exam{border:2px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.exam .d{font-family:var(--f-display);font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+.exam .d small{font-family:var(--f-body);font-size:13px;color:var(--muted);margin-left:2px}
+.exam .nm{font-size:13px;font-weight:700;overflow-wrap:anywhere}
+.exam.soon{border-color:var(--bad);background:var(--bad-soft)}
+.exam.soon .d{color:var(--bad)}
+
+/* day picker */
+.days{display:flex;gap:6px;flex-wrap:wrap}
+.day{width:40px;height:40px;border-radius:50%;border:2px solid var(--line);background:transparent;font-family:var(--f-display);font-size:18px}
+.day[aria-pressed="true"]{border-color:var(--primary);background:var(--primary);color:var(--primary-ink)}
+.day.today:not([aria-pressed="true"]){border-color:var(--primary);color:var(--primary)}
+
+/* progress */
+.progress{display:flex;align-items:center;gap:12px;background:var(--sun-soft);border-radius:14px;padding:12px 14px}
+.stars{font-size:22px;letter-spacing:2px;color:var(--sun);white-space:nowrap}
+.stars .off{color:var(--line)}
+.bar{flex:1;height:12px;border-radius:99px;background:var(--paper);border:2px solid var(--ink);overflow:hidden;min-width:80px}
+.bar>i{display:block;height:100%;background:var(--sun);transition:width .3s}
+
+/* plan list */
+.plan{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.item{display:grid;grid-template-columns:64px 1fr auto;gap:12px;align-items:center;padding:10px 12px;border-radius:14px;border:2px solid var(--line);background:var(--paper)}
+.item .time{font-family:var(--f-display);font-size:18px;font-variant-numeric:tabular-nums;line-height:1.1}
+.item .time small{display:block;font-family:var(--f-body);font-size:11px;color:var(--muted)}
+.item .what{min-width:0;display:flex;flex-direction:column;gap:2px}
+.item .t{font-weight:700;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.item .n{font-size:13px;color:var(--muted)}
+.item.break{background:transparent;border-style:dashed}
+.item.exam-item{border-color:var(--bad)}
+.item.now{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.item.done{background:var(--ok-soft);border-color:transparent}
+.item.done .t span.title{text-decoration:line-through;text-decoration-thickness:2px;opacity:.7}
+.pill{font-size:11px;font-weight:700;padding:1px 8px;border-radius:99px;letter-spacing:.04em;white-space:nowrap}
+.pill.now{background:var(--primary);color:var(--primary-ink)}
+.pill.next{background:var(--sun);color:var(--sun-ink)}
+.pill.exam{background:var(--bad);color:var(--paper)}
+.pill.plain{background:var(--line);color:var(--ink)}
+.check{width:40px;height:40px;border-radius:12px;border:2px solid var(--ink);background:var(--paper);font-size:22px;line-height:1;display:grid;place-items:center}
+.item.done .check{background:var(--ok);border-color:var(--ok);color:var(--paper)}
+.subj{display:inline-flex;align-items:center;padding:1px 10px;border-radius:8px;font-weight:700;font-size:13px;white-space:nowrap;
+  background:hsl(var(--h) 75% var(--chip-l));color:hsl(var(--h) 55% var(--chip-ink-l))}
+.go{background:none;border:0;color:var(--primary);font-weight:700;font-size:13px;padding:0;text-align:left}
+
+.bag{border:2px dashed var(--primary);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.bag ul{margin:0;padding-left:20px}
+
+/* timetable */
+.brushes{display:flex;gap:6px;flex-wrap:wrap}
+.brush{border:2px solid transparent;border-radius:10px;padding:4px 12px;font-weight:700;
+  background:hsl(var(--h) 75% var(--chip-l));color:hsl(var(--h) 55% var(--chip-ink-l))}
+.brush[aria-pressed="true"]{border-color:var(--ink);box-shadow:2px 2px 0 var(--ink)}
+.brush.erase{--h:220;background:transparent;border-color:var(--line);color:var(--muted)}
+.brush.erase[aria-pressed="true"]{border-color:var(--ink);color:var(--ink)}
+.tt-scroll{overflow-x:auto;margin:0 -4px;padding:0 4px}
+table.tt{border-collapse:separate;border-spacing:4px;width:100%;min-width:520px}
+.tt th{font-family:var(--f-display);font-weight:700;font-size:16px;padding:4px}
+.tt th.p{font-family:var(--f-body);font-size:12px;color:var(--muted);font-weight:500;text-align:left;white-space:nowrap;font-variant-numeric:tabular-nums}
+.tt th.p b{display:block;color:var(--ink);font-size:13px}
+.tt td{padding:0}
+.cell{width:100%;height:46px;border-radius:10px;border:2px dashed var(--line);background:transparent;font-weight:700;font-size:15px}
+.cell.has{border:2px solid transparent;background:hsl(var(--h) 75% var(--chip-l));color:hsl(var(--h) 55% var(--chip-ink-l))}
+.cell:hover{border-color:var(--ink)}
+.lunch td{text-align:center;font-size:12px;color:var(--muted);letter-spacing:.3em;padding:2px}
+
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field.full{grid-column:1/-1}
+.field label{font-size:13px;color:var(--muted);font-weight:500}
+.field input,.field select,.field textarea,.inline-input{border:2px solid var(--line);border-radius:10px;padding:7px 10px;background:var(--paper);width:100%;min-width:0}
+.field textarea{resize:vertical;min-height:84px;line-height:1.5}
+.field input:focus,.field select:focus,.field textarea:focus,.inline-input:focus{border-color:var(--primary);outline:none}
+.btn{border:2px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:12px;padding:8px 16px;font-weight:700}
+.btn.ghost{background:var(--paper);color:var(--ink)}
+.btn.sun{background:var(--sun);color:var(--sun-ink);border-color:var(--sun-ink)}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:var(--primary-ink)}
+.subject-list{display:flex;flex-direction:column;gap:8px}
+.subject-row{display:grid;grid-template-columns:72px 120px 1fr auto auto;gap:10px;align-items:center;font-size:14px}
+.subject-row .bring{min-width:0;color:var(--muted)}
+.link{background:none;border:0;color:var(--warn);font-size:13px;padding:4px}
+
+.rem-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.rem{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 12px;border:2px solid var(--line);border-radius:14px}
+.rem .when{font-family:var(--f-display);font-size:16px;font-variant-numeric:tabular-nums;text-align:center;line-height:1.2;min-width:64px}
+.rem .when small{display:block;font-family:var(--f-body);font-size:11px;color:var(--muted)}
+.rem>div{min-width:0}
+.rem.past{opacity:.55}
+.note{background:var(--primary-soft);border-radius:12px;padding:10px 14px;font-size:13px}
+.divider{height:0;border-top:2px dashed var(--line)}
+
+/* notes & practice */
+.notes{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.ncard{border:2px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px;text-align:left;background:var(--paper);min-width:0}
+.ncard:hover{border-color:var(--ink)}
+.ncard .tl{font-family:var(--f-display);font-size:17px;font-weight:700;line-height:1.3;overflow-wrap:anywhere}
+.ncard .meta{font-size:12px;color:var(--muted)}
+.points{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.points li::marker{color:var(--primary);font-weight:700}
+.terms{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px}
+.term{border:2px solid var(--line);border-radius:10px;padding:6px 10px;font-size:14px;min-width:0;overflow-wrap:anywhere}
+.term b{display:block;font-family:var(--f-display);font-size:17px}
+.warnbox{background:var(--sun-soft);border-radius:12px;padding:8px 12px;font-size:13px}
+.quiz{border:2px solid var(--ink);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.quiz .q{font-family:var(--f-display);font-size:20px;line-height:1.4}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;border:2px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--paper);display:flex;gap:10px;align-items:flex-start}
+.opt .k{font-weight:700;color:var(--muted);min-width:1.2em}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.thinking{display:flex;gap:10px;align-items:center;color:var(--muted)}
+.dots i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--primary);margin-right:4px;animation:blink 1.2s infinite}
+.dots i:nth-child(2){animation-delay:.2s}.dots i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+
+.seg{display:inline-flex;border:2px solid var(--ink);border-radius:999px;overflow:hidden;align-self:flex-start;flex-wrap:wrap}
+.segb{border:0;background:var(--paper);padding:6px 16px;font-weight:700}
+.segb[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+
+/* parent */
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.wd{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;min-width:0}
+.wd .col{width:100%;max-width:44px;height:96px;border:2px solid var(--line);border-radius:10px;display:flex;align-items:flex-end;overflow:hidden;background:var(--bg)}
+.wd .col i{display:block;width:100%;background:var(--ok)}
+.wd .col.future{border-style:dashed}
+.wd b{font-family:var(--f-display);font-size:16px}
+.wd.today b{color:var(--primary)}
+.wd span{font-variant-numeric:tabular-nums;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.stat{border:2px solid var(--line);border-radius:14px;padding:10px 14px}
+.stat .v{font-family:var(--f-display);font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat .k{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.08em}
+table.scores{width:100%;border-collapse:collapse;font-size:14px}
+.scores th,.scores td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+.scores th{font-size:12px;color:var(--muted);letter-spacing:.06em}
+.scores td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* alert */
+.overlay{position:fixed;inset:0;background:rgba(10,16,30,.55);display:grid;place-items:center;z-index:50;
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.alert{background:var(--paper);border:3px solid var(--ink);border-radius:22px;box-shadow:6px 6px 0 var(--ink);
+  max-width:380px;width:100%;padding:24px;display:flex;flex-direction:column;gap:14px;text-align:center;animation:pop .35s ease-out}
+.bell{font-size:44px;line-height:1;display:inline-block;transform-origin:50% 10%;animation:ring 1s ease-in-out 2}
+.alert h2{font-size:26px}
+@keyframes pop{from{transform:scale(.9);opacity:.6}to{transform:none;opacity:1}}
+@keyframes ring{0%,100%{transform:rotate(0)}20%{transform:rotate(18deg)}40%{transform:rotate(-16deg)}60%{transform:rotate(10deg)}80%{transform:rotate(-6deg)}}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--paper);
+  padding:8px 18px;border-radius:99px;font-weight:700;z-index:60;font-size:14px;max-width:calc(100% - 32px);text-align:center}
+@media (prefers-reduced-motion:reduce){.alert,.bell,.dots i{animation:none}.bar>i{transition:none}}
+
+@media (max-width:620px){
+  .subject-row{grid-template-columns:72px 1fr auto}
+  .subject-row .bring{grid-column:1/-1;grid-row:2}
+  .subject-row .kind{display:none}
+}
+@media (max-width:520px){
+  h1{font-size:25px}
+  .panel{padding:16px}
+  .item{grid-template-columns:52px 1fr auto;gap:10px}
+  .tab{padding:5px 11px;font-size:14px}
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="hello">
+      <span class="date" id="today-label"></span>
+      <h1 id="greeting">今天也一起加油！</h1>
+    </div>
+    <div class="clock" id="clock" aria-label="現在時間">--:--</div>
+  </header>
+
+  <div class="banner" id="example-banner" hidden>
+    <span><b>現在看到的是範例資料。</b>課表、考試和重點筆記都是示範用的，可以先玩玩看。</span>
+    <button class="btn ghost" id="clear-example">清掉範例，開始填自己的</button>
+  </div>
+  <div class="banner" id="install-banner" hidden>
+    <span><b>可以裝到手機桌面。</b>裝好之後像 App 一樣打開，提醒也會用手機通知。</span>
+    <button class="btn" id="install-btn">安裝</button>
+    <button class="btn ghost" id="notify-btn" hidden>允許通知</button>
+  </div>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-tab="plan">今日計劃</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="tt">課表與課本</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="notes">重點練習</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="rem">考試與提醒</button>
+    <button class="tab parent" role="tab" aria-selected="false" data-tab="parent">家長</button>
+  </nav>
+
+  <!-- PLAN -->
+  <section class="panel" id="panel-plan">
+    <div id="parent-msg"></div>
+    <div id="exam-strip"></div>
+    <div class="row between">
+      <h2 id="plan-title">讀書計劃</h2>
+      <div class="days" id="plan-days"></div>
+    </div>
+    <div id="plan-body"></div>
+    <div class="divider"></div>
+    <div class="form">
+      <div class="field"><label for="set-start">放學後幾點開始</label><input type="time" id="set-start"></div>
+      <div class="field"><label for="set-hw">寫作業（分鐘）</label><input type="number" id="set-hw" min="10" max="120" step="5"></div>
+      <div class="field"><label for="set-review">每科複習（分鐘）</label><input type="number" id="set-review" min="5" max="60" step="5"></div>
+      <div class="field"><label for="set-preview">每科預習（分鐘）</label><input type="number" id="set-preview" min="5" max="60" step="5"></div>
+    </div>
+    <p class="muted small">計劃的排法：先寫作業。一週內有考試的科目排在最前面，越接近考試，複習時間加越多（7 天內 +10 分鐘，3 天內 +15 分鐘，明天考 +20 分鐘）。接著複習今天上過的科目、預習明天的科目，每讀兩科休息 10 分鐘，最後整理書包。</p>
+  </section>
+
+  <!-- TIMETABLE -->
+  <section class="panel" id="panel-tt" hidden>
+    <h2>學校與課本</h2>
+    <div class="form">
+      <div class="field"><label for="sc-name">學校</label><input id="sc-name" maxlength="20" placeholder="例如：中正國小"></div>
+      <div class="field"><label for="sc-grade">年級</label>
+        <select id="sc-grade"><option value="">請選擇</option>
+          <option>一年級</option><option>二年級</option><option>三年級</option><option>四年級</option><option>五年級</option><option>六年級</option>
+          <option>國一</option><option>國二</option><option>國三</option></select></div>
+      <div class="field"><label for="sc-term">學期</label>
+        <select id="sc-term"><option value="上">上學期</option><option value="下">下學期</option></select></div>
+    </div>
+    <div class="divider"></div>
+    <div class="row between">
+      <h2>我的課表</h2>
+      <button class="btn ghost" id="tt-clear">清空課表</button>
+    </div>
+    <div class="note">先點一個科目，再點下面的格子，就能把課填進去。選「橡皮擦」可以擦掉。</div>
+    <div id="tt-photo"></div>
+    <div class="brushes" id="brushes"></div>
+    <div class="tt-scroll"><table class="tt" id="tt"></table></div>
+    <div class="divider"></div>
+    <div class="row between"><h3>科目和課本版本</h3><button class="btn ghost" id="preset-subjects" hidden>放入常用科目</button></div>
+    <p class="muted small">選好每一科用的是哪一家的課本（康軒、南一、翰林、南山……），整理重點的時候會照著那個版本來整理。</p>
+    <datalist id="publishers"><option value="康軒"><option value="南一"><option value="翰林"><option value="南山"><option value="何嘉仁"><option value="部編"><option value="學校自編"></datalist>
+    <div class="subject-list" id="subject-list"></div>
+    <form class="form" id="subject-form">
+      <div class="field"><label for="ns-name">新科目名稱</label><input id="ns-name" maxlength="6" placeholder="例如：電腦" required></div>
+      <div class="field"><label for="ns-pub">課本版本</label><input id="ns-pub" list="publishers" maxlength="10" placeholder="例如：康軒"></div>
+      <div class="field"><label for="ns-bring">上課要帶的東西</label><input id="ns-bring" maxlength="30" placeholder="例如：耳機"></div>
+      <div class="field"><label for="ns-study">要排讀書時間嗎</label>
+        <select id="ns-study"><option value="1">要</option><option value="0">不用</option></select></div>
+      <button class="btn" type="submit">加入科目</button>
+    </form>
+  </section>
+
+  <!-- NOTES -->
+  <section class="panel" id="panel-notes" hidden>
+    <div id="notes-view"></div>
+  </section>
+
+  <!-- REMINDERS -->
+  <section class="panel" id="panel-rem" hidden>
+    <div class="row between">
+      <h2>考試</h2>
+    </div>
+    <form class="form" id="exam-form">
+      <div class="field"><label for="ne-subj">科目</label><select id="ne-subj" required></select></div>
+      <div class="field"><label for="ne-title">考什麼</label><input id="ne-title" maxlength="20" placeholder="例如：第一次段考" required></div>
+      <div class="field"><label for="ne-date">考試日期</label><input type="date" id="ne-date" required></div>
+      <div class="field full"><label for="ne-scope">考試範圍</label><input id="ne-scope" maxlength="40" placeholder="例如：第 1～4 課"></div>
+      <button class="btn" type="submit">加入考試</button>
+    </form>
+    <ul class="rem-list" id="exam-list"></ul>
+    <div class="divider"></div>
+    <div class="row between">
+      <h2>提醒</h2>
+      <div class="row">
+        <button class="btn sun" id="sound-btn">開啟提醒聲音</button>
+        <button class="btn ghost" id="test-btn">5 秒後試一次</button>
+      </div>
+    </div>
+    <div class="note">畫面開著的時候，計劃裡每一項的開始時間到了就會跳出提醒。考試前一天晚上 7 點和考試當天早上 7 點也會提醒。</div>
+    <form class="form" id="rem-form">
+      <div class="field full"><label for="nr-text">要提醒什麼</label><input id="nr-text" maxlength="40" placeholder="例如：繳校外教學回條" required></div>
+      <div class="field"><label for="nr-date">日期</label><input type="date" id="nr-date" required></div>
+      <div class="field"><label for="nr-time">時間</label><input type="time" id="nr-time" required></div>
+      <button class="btn" type="submit">加入提醒</button>
+    </form>
+    <ul class="rem-list" id="rem-list"></ul>
+  </section>
+
+  <!-- PARENT -->
+  <section class="panel" id="panel-parent" hidden>
+    <div id="parent-lock"></div>
+    <div id="parent-content" style="display:flex;flex-direction:column;gap:18px" hidden>
+    <div class="row between">
+      <h2>家長看板</h2>
+      <div class="row"><span class="small muted" id="sync-state"></span>
+        <button class="btn ghost" id="pw-change" type="button">改密碼</button>
+        <button class="btn ghost" id="parent-lock-btn" type="button">鎖上</button></div>
+    </div>
+    <div class="stats" id="parent-stats"></div>
+    <div>
+      <div class="label" style="margin-bottom:8px">這週每天完成多少</div>
+      <div class="week" id="parent-week"></div>
+    </div>
+    <div class="divider"></div>
+    <h3>練習成績</h3>
+    <div id="parent-scores" style="overflow-x:auto"></div>
+    <div class="divider"></div>
+    <h3>給孩子一句話</h3>
+    <p class="muted small">孩子打開「今日計劃」時會在最上面看到。</p>
+    <form class="form" id="msg-form">
+      <div class="field full"><label for="pm-text">想說的話</label><input id="pm-text" maxlength="60" placeholder="例如：今天數學小考辛苦了，晚上一起吃冰淇淋！" required></div>
+      <button class="btn primary" type="submit">送出</button>
+    </form>
+    </div>
+  </section>
+</div>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="alert" role="alertdialog" aria-labelledby="al-title">
+    <div><span class="bell" aria-hidden="true">🔔</span></div>
+    <div class="label" id="al-kicker">時間到了</div>
+    <h2 id="al-title"></h2>
+    <p class="muted" id="al-note"></p>
+    <div class="row" style="justify-content:center">
+      <button class="btn" id="al-ok">好，我開始了</button>
+      <button class="btn ghost" id="al-snooze">再 5 分鐘</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const WD=['日','一','二','三','四','五','六'];
+const PERIODS=[['08:40','09:20'],['09:30','10:10'],['10:30','11:10'],['11:20','12:00'],['13:30','14:10'],['14:20','15:00'],['15:20','16:00']];
+const PNAME=['第一節','第二節','第三節','第四節','第五節','第六節','第七節','第八節'];
+const PRESET=[
+  {id:'zh',name:'國語',h:350,study:true,bring:'國語課本、生字簿'},
+  {id:'math',name:'數學',h:215,study:true,bring:'數學課本、直尺'},
+  {id:'en',name:'英語',h:150,study:true,bring:'英語課本'},
+  {id:'sci',name:'自然',h:95,study:true,bring:'自然課本、習作'},
+  {id:'soc',name:'社會',h:30,study:true,bring:'社會課本'},
+  {id:'tw',name:'本土語',h:60,study:true,bring:''},
+  {id:'pe',name:'體育',h:185,study:false,bring:'運動服、水壺'},
+  {id:'art',name:'美勞',h:280,study:false,bring:'彩色筆、剪刀、膠水'},
+  {id:'mus',name:'音樂',h:255,study:false,bring:'直笛'}
+];
+const pad=n=>String(n).padStart(2,'0');
+const toMin=s=>{const [h,m]=String(s||'0:0').split(':').map(Number);return (h||0)*60+(m||0)};
+const fmt=m=>pad(Math.floor(m/60)%24)+':'+pad(m%60);
+const dkey=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uniq=a=>[...new Set(a.filter(Boolean))];
+const clone=o=>JSON.parse(JSON.stringify(o));
+const daysBetween=(a,b)=>Math.round((Date.parse(b+'T00:00:00')-Date.parse(a+'T00:00:00'))/864e5);
+const now=()=>new Date();
+const todayKey=()=>dkey(now());
+const uid=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+/* ---------- data ---------- */
+function blankTT(){const t={};for(let d=1;d<=5;d++)t[d]=Array(8).fill(null);return t}
+function normalize(m){
+  m=m?clone(m):{};
+  const tt=blankTT(); if(m.timetable) for(let d=1;d<=5;d++) if(Array.isArray(m.timetable[d])) tt[d]=m.timetable[d].slice(0,8).concat(Array(8).fill(null)).slice(0,8);
+  return {
+    subjects:Array.isArray(m.subjects)?m.subjects:[],
+    timetable:tt,
+    settings:Object.assign({start:'18:30',hw:30,review:15,preview:10},m.settings||{}),
+    reminders:Array.isArray(m.reminders)?m.reminders:[],
+    exams:Array.isArray(m.exams)?m.exams:[],
+    school:Object.assign({name:'',grade:'',term:'上'},m.school||{}),
+    message:m.message||null,
+    isExample:!!m.isExample,
+    periods:Array.isArray(m.periods)&&m.periods.length?m.periods.slice(0,8):null
+  };
+}
+const LKEY='kid-study-planner-v2';
+let cache={}; try{cache=JSON.parse(localStorage.getItem(LKEY))||{}}catch(e){}
+let main=normalize(cache.main), progress=cache.progress||{}, notes=cache.notes||{};
+let db=null, ask=null, readOnly=false, synced=false;
+const subj=id=>main.subjects.find(s=>s.id===id);
+function persistLocal(){try{localStorage.setItem(LKEY,JSON.stringify({main,progress,notes}))}catch(e){}}
+
+const writers={};
+function writeDoc(path,data){
+  const w=writers[path]||(writers[path]={busy:false,next:null});
+  w.next=data; if(w.busy) return;
+  w.busy=true;
+  (async()=>{
+    while(w.next){const d=w.next;w.next=null;
+      try{await db.doc(path).set(d)}catch(e){writeFailed(e)}}
+    w.busy=false;
+  })();
+}
+const pending=path=>writers[path]&&(writers[path].busy||writers[path].next);
+function writeFailed(e){
+  if(e&&e.code==='invalid_argument'){ if(!readOnly){readOnly=true;toast('你只能看，不能修改。請請爸媽把權限調成「可以參與」。')} }
+  else if(e&&e.code==='quota_exceeded') toast('資料存滿了，刪掉一些舊的重點筆記再試試。');
+  else toast('剛剛沒存到，網路好像不穩，等一下再試。');
+}
+function saveMain(){persistLocal(); if(db) writeDoc('planner/main',clone(main)); renderAll()}
+function saveProgress(dk){persistLocal(); if(db) writeDoc('progress/'+dk,clone(progress[dk]))}
+function saveNote(id){persistLocal(); if(db) writeDoc('notes/'+id,clone(notes[id]))}
+function removeNote(id){delete notes[id];persistLocal(); if(db) db.doc('notes/'+id).delete().catch(writeFailed)}
+
+/* ---------- plan ---------- */
+let viewDow=now().getDay();
+function dateForDow(dow){const d=now();d.setDate(d.getDate()+(dow-d.getDay()));return d}
+function nextSchoolDay(dow){return dow>=5||dow===0?1:dow+1}
+const boost=days=>days<=1?20:days<=3?15:days<=7?10:0;
+function upcomingExams(fromKey){
+  return main.exams.map(e=>({...e,days:daysBetween(fromKey,e.date)})).filter(e=>e.days>=0).sort((a,b)=>a.days-b.days);
+}
+function buildPlan(dow){
+  const s=main.settings, items=[], dk=dkey(dateForDow(dow)); let t, nb=0;
+  const add=(kind,id,title,mins,sid,note)=>{items.push({id,kind,title,mins,sid,note,start:t});t+=mins};
+  const brk=()=>add('break','break'+(nb++),'休息一下',10);
+  const isStudy=id=>{const x=subj(id);return x&&x.study};
+  const weekend=dow===0||dow===6;
+  // exam blocks: nearest exam per subject within 7 days, not today
+  const ex={}; upcomingExams(dk).forEach(e=>{if(e.days>=1&&e.days<=7&&subj(e.sid)&&!ex[e.sid]) ex[e.sid]=e});
+  const examBlocks=Object.values(ex).map(e=>['exam','exam-'+e.sid,subj(e.sid).name+' 考前複習',(weekend?30:+s.review)+boost(e.days),e.sid,
+    `${e.title}${e.days===1?'就是明天':'還有 '+e.days+' 天'}${e.scope?'・範圍：'+e.scope:''}`,e]);
+  let blocks;
+  if(weekend){
+    t=toMin('09:30');
+    const all=uniq([1,2,3,4,5].flatMap(d=>main.timetable[d]||[])).filter(id=>isStudy(id)&&!ex[id]);
+    blocks=[...examBlocks,...all.map(id=>['review','review-'+id,subj(id).name+' 一週複習',20,id,'把這週的筆記和習作再看一次'])];
+  }else{
+    t=toMin(s.start);
+    add('hw','hw','寫今天的作業',+s.hw,null,'照著聯絡簿一項一項寫');
+    if(!(main.timetable[dow]||[]).some(Boolean)&&!examBlocks.length) return [];
+    brk();
+    const nd=nextSchoolDay(dow);
+    const today=uniq(main.timetable[dow]||[]).filter(id=>isStudy(id)&&!ex[id]);
+    const tomorrow=uniq(main.timetable[nd]||[]).filter(id=>isStudy(id)&&!ex[id]);
+    blocks=[...examBlocks,
+      ...today.map(id=>['review','review-'+id,subj(id).name+' 複習',+s.review,id,'今天上過，把重點說一遍給自己聽']),
+      ...tomorrow.map(id=>['preview','preview-'+id,subj(id).name+' 預習',+s.preview,id,(nd===1?'下週一':'明天')+'要上，先看看課本'])];
+  }
+  blocks.forEach((b,i)=>{add(b[0],b[1],b[2],b[3],b[4],b[5]); if(b[6]) items[items.length-1].exam=b[6]; if(i%2===1&&i<blocks.length-1) brk()});
+  if(dow!==6) add('pack','pack','整理明天的書包',dow===0?10:5,null,'看下面的清單一樣一樣放');
+  return items;
+}
+
+function renderParentMsg(){
+  const m=main.message, el=$('parent-msg');
+  if(!m||!m.text||m.read){el.innerHTML='';return}
+  el.innerHTML=`<div class="msg"><div><div class="who">爸媽想對你說</div><div class="text">${esc(m.text)}</div></div><button class="btn ghost" id="msg-read">收到了</button></div>`;
+}
+function renderExamStrip(){
+  const list=upcomingExams(todayKey()).slice(0,4), el=$('exam-strip');
+  if(!list.length){el.innerHTML='';return}
+  el.innerHTML='<div class="label" style="margin-bottom:8px">考試倒數</div><div class="exams">'+list.map(e=>{
+    const s=subj(e.sid);
+    return `<div class="exam${e.days<=3?' soon':''}">
+      <div>${s?`<span class="subj" style="--h:${s.h}">${esc(s.name)}</span>`:''}</div>
+      <div class="d">${e.days===0?'今天':e.days}${e.days===0?'':'<small>天</small>'}</div>
+      <div class="nm">${esc(e.title)}</div>${e.scope?`<div class="small muted">${esc(e.scope)}</div>`:''}</div>`}).join('')+'</div>';
+}
+function renderDays(){
+  const td=now().getDay();
+  $('plan-days').innerHTML=[1,2,3,4,5,6,0].map(d=>`<button class="day${d===td?' today':''}" aria-pressed="${d===viewDow}" data-d="${d}" aria-label="星期${WD[d]}">${WD[d]}</button>`).join('');
+}
+function renderPlan(){
+  renderParentMsg(); renderExamStrip(); renderDays();
+  const isToday=viewDow===now().getDay();
+  $('plan-title').textContent=(isToday?'今天':'星期'+WD[viewDow])+'的讀書計劃';
+  const hasTT=[1,2,3,4,5].some(d=>(main.timetable[d]||[]).some(Boolean));
+  if(!hasTT&&!main.exams.length){
+    $('plan-body').innerHTML=`<div class="empty"><b style="font-family:var(--f-display);font-size:20px;color:var(--ink)">還沒有課表</b>
+      <span>把每天上什麼課填進去，這裡就會自動排出放學後要讀什麼。</span>
+      <button class="btn" data-goto="tt">去填課表</button></div>`;
+    return;
+  }
+  const items=buildPlan(viewDow), dk=dkey(dateForDow(viewDow));
+  const done=(progress[dk]&&progress[dk].done)||{};
+  const nm=now().getHours()*60+now().getMinutes();
+  const tasks=items.filter(i=>i.kind!=='break'), nDone=tasks.filter(i=>done[i.id]).length;
+  let nextMarked=false;
+  const noteSubjects=new Set(Object.values(notes).map(n=>n.sid));
+  const list=items.map(it=>{
+    const isDone=!!done[it.id], isBreak=it.kind==='break';
+    let badge='', cls='item';
+    if(isBreak) cls+=' break';
+    if(it.kind==='exam') {cls+=' exam-item'; badge+='<span class="pill exam">考試</span>'}
+    if(isDone) cls+=' done';
+    if(isToday&&!isDone){
+      if(nm>=it.start&&nm<it.start+it.mins){badge+='<span class="pill now">現在</span>';cls+=' now';nextMarked=true}
+      else if(!nextMarked&&it.start>nm&&!isBreak){badge+='<span class="pill next">下一個</span>';nextMarked=true}
+    }
+    const s=it.sid?subj(it.sid):null;
+    const tag=s?`<span class="subj" style="--h:${s.h}">${esc(s.name)}</span>`:'';
+    const kind={hw:'作業',review:it.title.includes('一週')?'一週複習':'複習',preview:'預習',pack:'書包',exam:'考前複習'}[it.kind]||it.title;
+    const en=it.exam&&noteForExam(it.exam.id);
+    const practice=en?`<button class="go" data-opennote="${en}">看段考重點、做模擬題 →</button>`
+      :it.exam&&ask?`<button class="go" data-examnote="${it.exam.id}">幫我整理這次考試的重點 →</button>`
+      :s&&(it.kind==='exam'||it.kind==='review')&&noteSubjects.has(s.id)?`<button class="go" data-practice="${s.id}">去做 ${esc(s.name)} 練習題 →</button>`:'';
+    return `<li class="${cls}">
+      <div class="time">${fmt(it.start)}<small>${it.mins} 分鐘</small></div>
+      <div class="what"><div class="t">${tag}<span class="title">${esc(isBreak?it.title:(s?kind:it.title))}</span>${badge}</div>
+      <div class="n">${esc(isBreak?'離開書桌，喝口水、看看遠方':it.note)}</div>${practice}</div>
+      ${isBreak?'<span></span>':`<button class="check" data-id="${it.id}" aria-pressed="${isDone}" aria-label="${isDone?'取消完成':'完成'}：${esc(it.title)}" ${readOnly?'disabled':''}>${isDone?'✓':''}</button>`}
+    </li>`}).join('');
+  const total=tasks.length, pct=total?nDone/total:0, starN=Math.round(pct*5);
+  $('plan-body').innerHTML=`<div style="display:flex;flex-direction:column;gap:14px">
+    <div class="progress"><span class="stars">${'★'.repeat(starN)}<span class="off">${'★'.repeat(5-starN)}</span></span>
+      <div class="bar"><i style="width:${pct*100}%"></i></div>
+      <b style="font-variant-numeric:tabular-nums;white-space:nowrap">${nDone}/${total}${nDone===total&&total?' 全部完成！':''}</b></div>
+    ${items.length?`<ol class="plan">${list}</ol>`:'<div class="empty">這天沒有排讀書，好好休息！</div>'}
+    ${bagHTML()}</div>`;
+}
+function bagHTML(){
+  if(viewDow===6) return '';
+  const nd=nextSchoolDay(viewDow);
+  const things=uniq(main.timetable[nd]||[]).map(subj).filter(s=>s&&s.bring);
+  const lbl=(viewDow>=5||viewDow===0)?'星期一':'明天（星期'+WD[nd]+'）';
+  const examTomorrow=main.exams.filter(e=>daysBetween(dkey(dateForDow(viewDow)),e.date)===(viewDow===5?3:viewDow===0?1:1));
+  return `<div class="bag"><div class="label">${lbl}書包要帶</div>`+(things.length||examTomorrow.length?
+    '<ul>'+things.map(s=>`<li><span class="subj" style="--h:${s.h}">${esc(s.name)}</span> ${esc(s.bring)}</li>`).join('')
+      +examTomorrow.map(e=>`<li><b>要考 ${esc(subj(e.sid)?.name||'')}：</b>${esc(e.title)}，記得帶鉛筆、橡皮擦</li>`).join('')+'</ul>'
+    :'<span class="muted small">沒有特別要帶的東西。</span>')+'</div>';
+}
+$('panel-plan').addEventListener('click',e=>{
+  const d=e.target.closest('.day'); if(d){viewDow=+d.dataset.d;renderPlan();return}
+  const c=e.target.closest('.check');
+  if(c){
+    const dk=dkey(dateForDow(viewDow));
+    const p=progress[dk]?clone(progress[dk]):{date:dk,done:{}};
+    p.done[c.dataset.id]=!p.done[c.dataset.id];
+    const tasks=buildPlan(viewDow).filter(i=>i.kind!=='break');
+    p.total=tasks.length; p.count=tasks.filter(i=>p.done[i.id]).length; p.date=dk;
+    progress[dk]=p; saveProgress(dk); renderPlan(); renderParent();
+    if(p.done[c.dataset.id]) toast(p.count===p.total?'今天全部完成！好厲害 ★★★':'好棒！完成一項 ★');
+    return;
+  }
+  const pr=e.target.closest('[data-practice]'); if(pr){practiceFilter=pr.dataset.practice;openNote=null;showTab('notes');return}
+  if(e.target.id==='msg-read'){main.message={...main.message,read:true};saveMain();return}
+});
+['start','hw','review','preview'].forEach(k=>{
+  $('set-'+k).addEventListener('change',e=>{const v=e.target.value; if(!v) return; main.settings[k]=k==='start'?v:Math.max(5,+v); saveMain()});
+});
+
+/* ---------- timetable & subjects ---------- */
+let brush=null;
+function renderTT(){
+  if(!brush||(brush!=='__erase'&&!subj(brush))) brush=main.subjects[0]?.id||'__erase';
+  $('brushes').innerHTML=main.subjects.map(s=>
+    `<button class="brush" style="--h:${s.h}" aria-pressed="${brush===s.id}" data-b="${s.id}">${esc(s.name)}</button>`).join('')
+    +`<button class="brush erase" aria-pressed="${brush==='__erase'}" data-b="__erase">橡皮擦</button>`;
+  let h='<thead><tr><th></th>'+[1,2,3,4,5].map(d=>`<th>${WD[d]}</th>`).join('')+'</tr></thead><tbody>';
+  const P=main.periods&&main.periods.length?main.periods.map(x=>[x.start||'',x.end||'']):PERIODS;
+  P.forEach((p,i)=>{
+    if(i===4) h+='<tr class="lunch"><td></td><td colspan="5">午餐・午休</td></tr>';
+    h+=`<tr><th class="p"><b>${PNAME[i]}</b>${p[0]}</th>`;
+    [1,2,3,4,5].forEach(d=>{
+      const s=subj(main.timetable[d][i]);
+      h+=`<td><button class="cell${s?' has':''}" ${s?`style="--h:${s.h}"`:''} data-d="${d}" data-p="${i}" aria-label="星期${WD[d]}${PNAME[i]}：${s?esc(s.name):'空堂'}">${s?esc(s.name):''}</button></td>`;
+    });
+    h+='</tr>';
+  });
+  $('tt').innerHTML=h+'</tbody>';
+  $('preset-subjects').hidden=main.subjects.length>0;
+  $('subject-list').innerHTML=main.subjects.length?main.subjects.map(s=>
+    `<div class="subject-row"><span class="subj" style="--h:${s.h}">${esc(s.name)}</span>
+     <input class="inline-input" list="publishers" maxlength="10" value="${esc(s.publisher||'')}" placeholder="哪一版？" data-pub="${s.id}" aria-label="${esc(s.name)}的課本版本">
+     <span class="bring">${s.bring?'要帶：'+esc(s.bring):'不用帶特別的東西'}</span>
+     <span class="small muted kind">${s.study?'排讀書時間':'只提醒帶東西'}</span>
+     <button class="link" data-del="${s.id}" aria-label="刪除${esc(s.name)}">刪除</button></div>`).join('')
+    :'<div class="empty">還沒有科目。按「放入常用科目」，或在下面自己加。</div>';
+  const sc=main.school;
+  setVal('sc-name',sc.name); setVal('sc-grade',sc.grade); setVal('sc-term',sc.term);
+  renderTTPhoto();
+}
+function setVal(id,v){const el=$(id); if(document.activeElement!==el) el.value=v==null?'':v}
+$('brushes').addEventListener('click',e=>{const b=e.target.closest('.brush');if(!b)return;brush=b.dataset.b;renderTT()});
+$('tt').addEventListener('click',e=>{
+  const c=e.target.closest('.cell'); if(!c||!brush) return;
+  main.timetable[c.dataset.d][+c.dataset.p]=brush==='__erase'?null:brush; saveMain();
+});
+let clearArmed=false;
+$('tt-clear').addEventListener('click',e=>{
+  if(!clearArmed){clearArmed=true;e.target.textContent='再按一次確定清空';setTimeout(()=>{clearArmed=false;e.target.textContent='清空課表'},3000);return}
+  main.timetable=blankTT(); clearArmed=false; e.target.textContent='清空課表'; saveMain(); toast('課表清空了，重新填填看吧');
+});
+$('preset-subjects').addEventListener('click',()=>{main.subjects=clone(PRESET);saveMain()});
+
+/* timetable from a photo */
+let ttGen=false, ttPreview=null;
+const NONSTUDY=/體育|健康|健體|音樂|美術|美勞|視覺|表演|藝術|童軍|家政|輔導|綜合|班會|社團|週會|自習|彈性/;
+function renderTTPhoto(){
+  const el=$('tt-photo'); if(!el) return;
+  if(!ask||!imagesOK){el.innerHTML='';return}
+  if(ttPreview){
+    const r=ttPreview;
+    el.innerHTML=`<div class="bag"><div class="label">讀到的課表，確認一下對不對</div>
+      <div class="tt-scroll"><table class="tt"><thead><tr><th></th>${[1,2,3,4,5].map(d=>`<th>${WD[d]}</th>`).join('')}</tr></thead><tbody>
+      ${r.periods.map((p,i)=>`<tr><th class="p"><b>${PNAME[i]}</b>${esc(p.start)}</th>${[1,2,3,4,5].map(d=>`<td class="small" style="text-align:center">${esc(r.days[d][i]||'—')}</td>`).join('')}</tr>`).join('')}
+      </tbody></table></div>
+      ${r.newNames.length?`<span class="small muted">會新增這些科目：${r.newNames.map(esc).join('、')}</span>`:''}
+      <div class="row"><button class="btn primary" id="tt-apply">套用這份課表</button><button class="btn ghost" id="tt-cancel">不對，重新拍</button></div></div>`;
+    return;
+  }
+  el.innerHTML=`<div class="bag"><div class="label">拍照自動填課表</div>
+    <div class="row"><input type="file" id="tt-file" accept="image/*" aria-label="課表照片" style="min-width:0;max-width:100%"><button class="btn primary" id="tt-read" ${ttGen?'disabled':''}>${ttGen?'正在看課表……':'讀取課表'}</button></div>
+    <span class="small muted">整張課表都要拍進去，字要清楚。讀完會先給你確認，按「套用」才會填進去。</span></div>`;
+}
+function matchSubject(name){
+  const n=String(name||'').trim(); if(!n) return null;
+  return main.subjects.find(s=>s.name===n)||main.subjects.find(s=>n.includes(s.name)||s.name.includes(n))||null;
+}
+$('tt-photo').addEventListener('click',async e=>{
+  if(e.target.id==='tt-cancel'){ttPreview=null;renderTTPhoto();return}
+  if(e.target.id==='tt-apply'&&ttPreview){
+    const r=ttPreview, hues=[10,45,120,170,200,240,300,330];
+    const idFor=name=>{ if(!name) return null; let s=matchSubject(name);
+      if(!s){s={id:uid('s'),name:String(name).slice(0,6),h:hues[main.subjects.length%hues.length],study:!NONSTUDY.test(name),bring:'',publisher:''};main.subjects.push(s)}
+      return s.id};
+    const grid=blankTT(); for(let d=1;d<=5;d++) for(let i=0;i<r.periods.length;i++) grid[d][i]=idFor(r.days[d][i]);
+    main.timetable=grid; main.periods=r.periods; ttPreview=null; saveMain(); toast('課表填好了！可以再點格子修改');
+    return;
+  }
+  if(e.target.id==='tt-read'){
+    const f=$('tt-file').files[0]; if(!f){toast('先選一張課表照片');return}
+    if(!ask||ttGen) return; ttGen=true; renderTTPhoto();
+    const grade=main.school.grade||'國中小';
+    const prompt=`這是一張台灣${grade}學生的課表照片。請讀出星期一到星期五每一節課的科目。
+- periods：依節次順序列出每一節的上課和下課時間（HH:MM），看不到時間就用空字串。最多 8 節，不含早自習、午休、打掃。
+- days："1" 到 "5" 代表星期一到五，每一天的陣列長度和 periods 一樣，依節次填科目名稱；空堂或看不清楚填 null。
+- 科目名稱把簡寫展開成常見全名，例如「國」→「國文」、「英」→「英語」、「數」→「數學」。
+- 現有科目：${main.subjects.map(s=>s.name).join('、')||'無'}。照片上的科目如果是同一科，請直接用這個清單上的名稱。
+只回覆一個 JSON 物件：{"periods":[{"start":"","end":""}],"days":{"1":[],"2":[],"3":[],"4":[],"5":[]}}`;
+    try{
+      const r=await ask.json(prompt,{images:[f]});
+      const periods=(Array.isArray(r&&r.periods)?r.periods:[]).slice(0,8).map(p=>({start:String(p&&p.start||''),end:String(p&&p.end||'')}));
+      const days={}; for(let d=1;d<=5;d++){const a=r&&r.days&&Array.isArray(r.days[d])?r.days[d]:[]; days[d]=periods.map((_,i)=>a[i]?String(a[i]).trim().slice(0,8):null)}
+      if(!periods.length||![1,2,3,4,5].some(d=>days[d].some(Boolean))) throw {code:'empty_completion'};
+      ttPreview={periods,days,newNames:uniq([1,2,3,4,5].flatMap(d=>days[d])).filter(n=>!matchSubject(n))};
+    }catch(err){ if(err&&err.code==='empty_completion') toast('看不出課表，換一張清楚一點的照片'); else genError(err)}
+    finally{ttGen=false;renderTTPhoto()}
+  }
+});
+$('subject-list').addEventListener('click',e=>{
+  const b=e.target.closest('[data-del]'); if(!b) return; const id=b.dataset.del;
+  main.subjects=main.subjects.filter(s=>s.id!==id);
+  for(let d=1;d<=5;d++) main.timetable[d]=main.timetable[d].map(x=>x===id?null:x);
+  main.exams=main.exams.filter(x=>x.sid!==id);
+  saveMain();
+});
+$('subject-list').addEventListener('change',e=>{
+  const id=e.target.dataset.pub; if(!id) return; const s=subj(id); if(!s) return;
+  s.publisher=e.target.value.trim(); saveMain(); toast(`${s.name}：${s.publisher||'未設定'}版`);
+});
+$('subject-form').addEventListener('submit',e=>{
+  e.preventDefault();
+  const name=$('ns-name').value.trim(); if(!name) return;
+  const hues=[10,45,120,170,200,240,300,330];
+  const s={id:uid('s'),name,h:hues[main.subjects.length%hues.length],study:$('ns-study').value==='1',
+    bring:$('ns-bring').value.trim(),publisher:$('ns-pub').value.trim()};
+  main.subjects.push(s); brush=s.id; e.target.reset(); saveMain(); toast('加入「'+name+'」，現在可以填進課表了');
+});
+[['sc-name','name'],['sc-grade','grade'],['sc-term','term']].forEach(([id,k])=>{
+  $(id).addEventListener('change',e=>{main.school[k]=e.target.value.trim();saveMain()});
+});
+
+/* ---------- notes & practice ---------- */
+let practiceFilter='', openNote=null, quiz=null, gen=null, genCtl=null, imagesOK=false, genMode='unit', genExam='';
+const drafts={};
+const noteForExam=id=>Object.keys(notes).find(k=>notes[k].examId===id);
+function noteList(){return Object.entries(notes).map(([id,n])=>({id,...n})).sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''))}
+function lastScore(n){const a=n.attempts||[];return a.length?a[a.length-1]:null}
+function renderNotes(){
+  const v=$('notes-view');
+  if(quiz) return renderQuiz(v);
+  if(openNote&&notes[openNote]) return renderNoteDetail(v,openNote);
+  const sc=main.school;
+  const studySubjects=main.subjects.filter(s=>s.study);
+  const list=noteList().filter(n=>!practiceFilter||n.sid===practiceFilter);
+  const exs=upcomingExams(todayKey()).filter(e=>subj(e.sid));
+  if(genExam&&!exs.find(e=>e.id===genExam)) genExam='';
+  const modeHTML=`<div class="seg" role="group" aria-label="整理方式"><button type="button" class="segb" data-mode="unit" aria-pressed="${genMode==='unit'}">依單元整理</button><button type="button" class="segb" data-mode="exam" aria-pressed="${genMode==='exam'}">依段考範圍整理</button></div>`;
+  const examFormHTML=exs.length?`<form class="form" id="gen-exam-form">
+      <div class="field full"><label for="ge-exam">哪一場考試</label><select id="ge-exam">${exs.map(e=>`<option value="${e.id}"${e.id===genExam?' selected':''}>${esc(subj(e.sid).name)}・${esc(e.title)}（${e.days===0?'今天':e.days+' 天後'}）${e.scope?'・'+esc(e.scope):'・範圍未填'}</option>`).join('')}</select></div>
+      <div class="field full"><label for="ge-input">範圍的內容、老師畫的重點（可以貼上，沒有也可以）</label><textarea id="ge-input" maxlength="6000" placeholder="例如：L1～L4，老師說注釋、修辭和作者一定要背">${esc(drafts['ge-input']||'')}</textarea></div>
+      <div class="field full" ${imagesOK?'':'hidden'}><label for="ge-photo">拍課本目錄、老師的重點或考古題（可選，最多 3 張）</label><input type="file" id="ge-photo" accept="image/*" multiple></div>
+      <button class="btn primary" type="submit" ${gen?'disabled':''}>整理這次段考的重點</button></form>`
+    :`<div class="empty">還沒有要考的考試。先到「考試與提醒」加上段考日期和範圍。<button class="btn" type="button" data-goto="rem">去加考試</button></div>`;
+  v.innerHTML=`<div style="display:flex;flex-direction:column;gap:18px">
+    <div class="row between"><h2>整理上課重點</h2>
+      <span class="small muted">${esc(sc.name||'學校未填')}・${esc(sc.grade||'年級未填')}・${sc.term==='下'?'下':'上'}學期</span></div>
+    ${ask?`${modeHTML}${genMode==='exam'?examFormHTML:''}<form class="form" id="gen-form" ${genMode==='exam'?'hidden':''}>
+      <div class="field"><label for="g-subj">科目</label><select id="g-subj" required>${studySubjects.map(s=>`<option value="${s.id}"${s.id===practiceFilter?' selected':''}>${esc(s.name)}${s.publisher?'（'+esc(s.publisher)+'）':''}</option>`).join('')}</select></div>
+      <div class="field"><label for="g-unit">第幾課／單元</label><input id="g-unit" maxlength="30" placeholder="例如：L3 或 第 2 章" value="${esc(drafts['g-unit']||'')}" required></div>
+      <div class="field full"><label for="g-input">老師說的重點、課本內容（可以貼上或自己打，沒有也可以）</label>
+        <textarea id="g-input" maxlength="3000" placeholder="例如：老師說這課的注釋和修辭要背……">${esc(drafts['g-input']||'')}</textarea></div>
+      <div class="field full" id="g-photo-wrap" ${imagesOK?'':'hidden'}><label for="g-photo">拍課本或筆記（可選，最多 3 張）</label><input type="file" id="g-photo" accept="image/*" multiple></div>
+      <button class="btn primary" type="submit" ${gen||!studySubjects.length?'disabled':''}>幫我整理重點和出題</button>
+    </form>
+    ${gen?`<div class="thinking"><span class="dots"><i></i><i></i><i></i></span><span>正在整理「${esc(gen)}」，大約要半分鐘……</span><button class="btn ghost" id="gen-stop">停止</button></div>`:''}
+    ${!studySubjects.length?'<p class="muted small">先到「課表與課本」加入科目，才能整理重點。</p>':''}
+    <p class="muted small">AI 會照著年級和課本版本整理重點，再出 5 題選擇題。打上或拍下課本內容會最準；沒有提供的話，它只能依課綱和常見教材來整理，內容請爸媽或老師幫忙看一下。</p>`
+    :`<div class="note">AI 整理重點要在 Claude 裡打開這一頁才能用。已經整理好的重點和練習題還是可以看、可以練習。</div>`}
+    <div class="divider"></div>
+    <div class="row between"><h3>我的重點筆記</h3>
+      <select id="n-filter" class="inline-input" style="width:auto" aria-label="只看某一科"><option value="">全部科目</option>${main.subjects.map(s=>`<option value="${s.id}"${s.id===practiceFilter?' selected':''}>${esc(s.name)}</option>`).join('')}</select></div>
+    ${list.length?`<div class="notes">${list.map(n=>{const s=subj(n.sid),ls=lastScore(n);
+      return `<button class="ncard" data-open="${n.id}">
+        <div class="row" style="gap:6px">${s?`<span class="subj" style="--h:${s.h}">${esc(s.name)}</span>`:''}${n.publisher?`<span class="pill plain">${esc(n.publisher)}</span>`:''}${n.examId?'<span class="pill exam">段考</span>':''}${n.example?'<span class="pill next">範例</span>':''}</div>
+        <div class="tl">${esc(n.title||n.unit)}</div>
+        <div class="meta">${(n.sections||[]).length?n.sections.length+' 課／章':(n.points||[]).length+' 個重點'}・${(n.questions||[]).length} 題練習${ls?`・上次 ${ls.score}/${ls.total}`:'・還沒練習'}</div></button>`}).join('')}</div>`
+      :'<div class="empty">還沒有重點筆記。在上面填好科目和第幾課，按「幫我整理重點和出題」。</div>'}
+  </div>`;
+}
+function renderNoteDetail(v,id){
+  const n=notes[id], s=subj(n.sid), att=n.attempts||[];
+  v.innerHTML=`<div style="display:flex;flex-direction:column;gap:16px">
+    <div><button class="go" id="n-back">← 回到重點筆記</button></div>
+    <div class="row">${s?`<span class="subj" style="--h:${s.h}">${esc(s.name)}</span>`:''}${n.publisher?`<span class="pill plain">${esc(n.publisher)}版</span>`:''}<span class="small muted">${esc(n.grade||'')}${n.term?'・'+esc(n.term)+'學期':''}・${esc(n.unit||'')}</span></div>
+    <h2>${esc(n.title||n.unit)}</h2>
+    ${(()=>{const ex=n.examId&&main.exams.find(x=>x.id===n.examId);if(!ex)return'';const d=daysBetween(todayKey(),ex.date);return d>=0?`<div><span class="pill exam">${d===0?'今天考試，加油！':'距離考試 '+d+' 天'}</span></div>`:''})()}
+    ${n.uncertain?'<div class="warnbox">這份重點是依課綱和常見教材整理的，跟課本可能不完全一樣，請對照課本看。</div>':''}
+    ${n.example?'<div class="warnbox">這是示範用的範例筆記。</div>':''}
+    ${(n.sections||[]).length?`<div style="display:flex;flex-direction:column;gap:14px">${n.sections.map(sec=>`<div><h3 style="margin-bottom:6px">${esc(sec.name)}</h3><ol class="points">${sec.points.map(p=>`<li>${esc(p)}</li>`).join('')}</ol></div>`).join('')}</div>`
+      :`<div><div class="label" style="margin-bottom:6px">上課重點</div><ol class="points">${(n.points||[]).map(p=>`<li>${esc(p)}</li>`).join('')}</ol></div>`}
+    ${(n.tips||[]).length?`<div class="warnbox"><b>考前提醒：</b>${n.tips.map(esc).join(' ')}</div>`:''}
+    ${(n.terms||[]).length?`<div><div class="label" style="margin-bottom:6px">要記住的</div><div class="terms">${n.terms.map(t=>`<div class="term"><b>${esc(t.word)}</b>${esc(t.meaning)}</div>`).join('')}</div></div>`:''}
+    <div class="row">
+      ${(n.questions||[]).length?`<button class="btn primary" id="q-start">開始練習（${n.questions.length} 題）</button>`:''}
+      <button class="btn ghost" id="n-del">${delArmed?'再按一次確定刪除':'刪除這份筆記'}</button>
+    </div>
+    ${att.length?`<p class="small muted">練習紀錄：${att.slice(-5).map(a=>`${a.score}/${a.total}`).join('、')}</p>`:''}
+  </div>`;
+}
+function renderQuiz(v){
+  const n=notes[quiz.id], q=n.questions[quiz.i];
+  if(quiz.i>=n.questions.length||!q){
+    const total=n.questions.length;
+    v.innerHTML=`<div class="quiz" style="text-align:center;align-items:center">
+      <div class="stars" style="font-size:34px">${'★'.repeat(Math.round(quiz.score/total*5))}<span class="off">${'★'.repeat(5-Math.round(quiz.score/total*5))}</span></div>
+      <div class="q">答對 ${quiz.score} / ${total} 題</div>
+      <p class="muted">${quiz.score===total?'全部答對，太厲害了！':quiz.score>=total*0.6?'很不錯！錯的那幾題再看一次重點。':'沒關係，回去看看重點再練一次。'}</p>
+      <div class="row" style="justify-content:center"><button class="btn primary" id="q-again">再練一次</button><button class="btn ghost" id="q-exit">看重點</button></div></div>`;
+    return;
+  }
+  const L='ABCD';
+  v.innerHTML=`<div class="quiz">
+    <div class="row between"><span class="label">第 ${quiz.i+1} 題 / 共 ${n.questions.length} 題</span><span class="small muted">答對 ${quiz.score} 題</span></div>
+    <div class="q">${esc(q.q)}</div>
+    <div class="opts">${q.options.map((o,i)=>{
+      let c='opt'; if(quiz.picked!=null){ if(i===q.answer) c+=' right'; else if(i===quiz.picked) c+=' wrong'; }
+      return `<button class="${c}" data-pick="${i}" ${quiz.picked!=null?'disabled':''}><span class="k">${L[i]}</span><span>${esc(o)}</span></button>`}).join('')}</div>
+    ${quiz.picked!=null?`<div class="${quiz.picked===q.answer?'note':'warnbox'}">${quiz.picked===q.answer?'答對了！':'答案是 '+L[q.answer]+'。'}${esc(q.explain||'')}</div>
+      <div><button class="btn" id="q-next">${quiz.i+1<n.questions.length?'下一題':'看成績'}</button></div>`:''}
+    <div><button class="go" id="q-exit">先不練了</button></div>
+  </div>`;
+}
+let delArmed=false;
+$('panel-notes').addEventListener('click',e=>{
+  const t=e.target;
+  const sm=t.closest('[data-mode]'); if(sm){genMode=sm.dataset.mode;renderNotes();return}
+  const o=t.closest('[data-open]'); if(o){openNote=o.dataset.open;delArmed=false;renderNotes();return}
+  if(t.id==='n-back'){openNote=null;renderNotes();return}
+  if(t.id==='n-del'){ if(!delArmed){delArmed=true;renderNotes();setTimeout(()=>{delArmed=false;if(openNote)renderNotes()},3000);return}
+    delArmed=false; removeNote(openNote); openNote=null; renderAll(); toast('筆記刪掉了'); return}
+  if(t.id==='q-start'||t.id==='q-again'){quiz={id:openNote,i:0,score:0,picked:null};renderNotes();return}
+  if(t.id==='q-exit'){quiz=null;renderNotes();return}
+  const pk=t.closest('[data-pick]');
+  if(pk&&quiz&&quiz.picked==null){const n=notes[quiz.id];quiz.picked=+pk.dataset.pick;if(quiz.picked===n.questions[quiz.i].answer)quiz.score++;renderNotes();return}
+  if(t.id==='q-next'){
+    quiz.i++; quiz.picked=null;
+    const n=notes[quiz.id];
+    if(quiz.i>=n.questions.length){
+      const nn=clone(n); nn.attempts=(nn.attempts||[]).concat({at:new Date().toISOString(),score:quiz.score,total:n.questions.length}).slice(-20);
+      notes[quiz.id]=nn; if(!readOnly) saveNote(quiz.id); renderParent();
+    }
+    renderNotes(); return;
+  }
+  if(t.id==='gen-stop'&&genCtl){genCtl.abort();return}
+});
+$('panel-notes').addEventListener('change',e=>{if(e.target.id==='n-filter'){practiceFilter=e.target.value;renderNotes()} if(e.target.id==='ge-exam') genExam=e.target.value});
+$('panel-notes').addEventListener('input',e=>{if(['g-unit','g-input','ge-input'].includes(e.target.id)) drafts[e.target.id]=e.target.value});
+$('panel-notes').addEventListener('submit',async e=>{
+  if(e.target.id==='gen-exam-form'){e.preventDefault();genExamNote();return}
+  if(e.target.id!=='gen-form') return;
+  e.preventDefault(); if(!ask||gen) return;
+  const s=subj($('g-subj').value), unit=$('g-unit').value.trim(), input=$('g-input').value.trim();
+  if(!s||!unit) return;
+  const files=$('g-photo')&&imagesOK?[...$('g-photo').files].slice(0,3):[];
+  const sc=main.school, grade=sc.grade||'國小', term=(sc.term==='下'?'下':'上');
+  const prompt=`你是台灣的國中小家教老師。請幫一位${grade}學生整理「${s.name}」${s.publisher?`（${s.publisher}版）`:''}${term}學期「${unit}」的上課重點，並出練習題。
+
+學生提供的上課內容（可能是空的）：
+"""
+${input}
+"""
+${files.length?`另外附上 ${files.length} 張課本或筆記的照片，請以照片內容為主。`:''}
+
+要求：
+- 用繁體中文和台灣用語，寫成${grade}學生看得懂的句子。英語科的單字和句型保留英文。
+- 以學生提供的文字和照片為準。沒有提供的話，依 108 課綱和這個年級常見的教學內容整理。不確定課本實際內容時，不要編造頁碼或課文原句，並把 uncertain 設為 true。
+- points：3 到 6 條重點，每條一句話，不超過 40 字。
+- terms：0 到 6 個要記住的詞語、單字或公式，格式 {"word":"","meaning":""}。
+- questions：5 題四選一的選擇題，格式 {"q":"題目","options":["","","",""],"answer":正確選項的索引 0 到 3,"explain":"一句話解釋"}。難度符合年級，正確答案的位置要分散。
+- title：這份筆記的標題，例如「第 5 課 分數的加減」。
+
+只回覆一個 JSON 物件：{"title":"","points":[],"terms":[],"questions":[],"uncertain":false}`;
+  gen=s.name+' '+unit; genCtl=new AbortController(); renderNotes();
+  try{
+    const r=await ask.json(prompt,{signal:genCtl.signal,images:files.length?files:undefined});
+    const qs=(Array.isArray(r&&r.questions)?r.questions:[]).filter(q=>q&&q.q&&Array.isArray(q.options)&&q.options.length===4&&Number.isInteger(+q.answer)&&+q.answer>=0&&+q.answer<4)
+      .map(q=>({q:String(q.q),options:q.options.map(String),answer:+q.answer,explain:String(q.explain||'')}));
+    const pts=(Array.isArray(r&&r.points)?r.points:[]).map(String).filter(Boolean).slice(0,8);
+    if(!pts.length) throw {code:'empty_completion'};
+    const id=uid('n');
+    notes[id]={sid:s.id,publisher:s.publisher||'',grade:sc.grade||'',term,unit,input:input.slice(0,3000),
+      title:String(r.title||unit).slice(0,40),points:pts,
+      terms:(Array.isArray(r.terms)?r.terms:[]).filter(t=>t&&t.word).slice(0,8).map(t=>({word:String(t.word),meaning:String(t.meaning||'')})),
+      questions:qs,uncertain:!!r.uncertain||(!input&&!files.length),createdAt:new Date().toISOString(),attempts:[]};
+    delete drafts['g-unit']; delete drafts['g-input'];
+    saveNote(id); openNote=id; toast('重點整理好了');
+  }catch(err){genError(err)}finally{gen=null;genCtl=null;renderNotes()}
+});
+function genError(err){
+  const c=err&&err.code;
+  if(c==='cancelled') toast('已經停止');
+  else if(c==='not_granted'||c==='sampling_disabled'||c==='capability_disabled') {ask=null;toast('這裡不能使用 AI 整理')}
+  else if(c==='rate_limited') toast('用得太快了，過一會兒再試');
+  else if(c==='prompt_too_large') toast('內容太長了，分成兩次整理吧');
+  else if(c==='image_rejected') toast('照片沒辦法讀，換一張清楚一點的');
+  else toast('這次沒整理好，再按一次試試看');
+}
+const cleanQs=a=>(Array.isArray(a)?a:[]).filter(q=>q&&q.q&&Array.isArray(q.options)&&q.options.length===4&&Number.isInteger(+q.answer)&&+q.answer>=0&&+q.answer<4)
+  .map(q=>({q:String(q.q),options:q.options.map(String),answer:+q.answer,explain:String(q.explain||'')}));
+const cleanTerms=(a,max)=>(Array.isArray(a)?a:[]).filter(t=>t&&t.word).slice(0,max).map(t=>({word:String(t.word),meaning:String(t.meaning||'')}));
+async function genExamNote(){
+  if(!ask||gen) return;
+  const ex=main.exams.find(x=>x.id===$('ge-exam').value), s=ex&&subj(ex.sid); if(!s) return;
+  genExam=ex.id;
+  const input=$('ge-input').value.trim();
+  const files=imagesOK&&$('ge-photo')?[...$('ge-photo').files].slice(0,3):[];
+  if(!ex.scope&&!input&&!files.length){toast('先在「考試與提醒」填考試範圍，或在這裡貼上範圍的內容');return}
+  const sc=main.school, grade=sc.grade||'國中', term=sc.term==='下'?'下':'上';
+  const prompt=`你是台灣的國中小家教老師。一位${grade}學生要準備「${s.name}」${s.publisher?`（${s.publisher}版）`:''}${term}學期的「${ex.title}」，考試範圍：${ex.scope||'見下方內容'}。請把整個範圍整理成考前複習重點，並出模擬題。
+
+學生提供的範圍內容或老師畫的重點（可能是空的）：
+"""
+${input}
+"""
+${files.length?`另外附上 ${files.length} 張課本、筆記或考卷的照片，請以照片內容為主。`:''}
+
+要求：
+- 用繁體中文和台灣用語。英語科的單字和句型保留英文。
+- 依範圍內的每一課或每一章分段。sections 每段格式 {"name":"課名或章名","points":[""]}，每段 2 到 5 條重點，每條一句話、不超過 45 字，挑最常考、最容易錯的觀念。
+- 以學生提供的文字和照片為準。沒有提供的話，依 108 課綱和這個版本、這個年級常見的教學內容整理；不確定課名或課文內容時，用「第 1 課」「第 2 章」這類名稱，不要編造課名、頁碼或課文原句，並把 uncertain 設為 true。
+- terms：0 到 10 個要背的詞語、單字、公式或名詞，格式 {"word":"","meaning":""}。
+- questions：10 題四選一的選擇題，平均分配到範圍內各課，格式 {"q":"題目","options":["","","",""],"answer":正確選項的索引 0 到 3,"explain":"一句話解釋"}。難度接近學校段考，正確答案的位置要分散。
+- tips：1 到 3 句考前提醒，例如容易混淆的地方。
+- title：例如「第一次段考 國文 L1～L4 重點」。
+
+只回覆一個 JSON 物件：{"title":"","sections":[],"terms":[],"questions":[],"tips":[],"uncertain":false}`;
+  gen=s.name+' '+ex.title; genCtl=new AbortController(); renderNotes();
+  try{
+    const r=await ask.json(prompt,{signal:genCtl.signal,images:files.length?files:undefined});
+    const sections=(Array.isArray(r&&r.sections)?r.sections:[]).filter(x=>x&&Array.isArray(x.points))
+      .map(x=>({name:String(x.name||''),points:x.points.map(String).filter(Boolean).slice(0,6)})).filter(x=>x.points.length).slice(0,12);
+    if(!sections.length) throw {code:'empty_completion'};
+    const id=uid('n');
+    notes[id]={sid:s.id,examId:ex.id,publisher:s.publisher||'',grade:sc.grade||'',term,unit:ex.title+(ex.scope?' '+ex.scope:''),input:input.slice(0,3000),
+      title:String(r.title||ex.title).slice(0,40),sections,points:[],tips:(Array.isArray(r.tips)?r.tips:[]).map(String).slice(0,3),
+      terms:cleanTerms(r.terms,10),questions:cleanQs(r.questions),uncertain:!!r.uncertain||(!input&&!files.length),createdAt:new Date().toISOString(),attempts:[]};
+    delete drafts['ge-input'];
+    saveNote(id); openNote=id; toast('段考重點整理好了');
+  }catch(err){genError(err)}finally{gen=null;genCtl=null;renderNotes()}
+}
+
+/* ---------- exams & reminders ---------- */
+function renderRem(){
+  const sel=$('ne-subj'), cur=sel.value;
+  sel.innerHTML=main.subjects.filter(s=>s.study).map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  if(cur) sel.value=cur;
+  const tk=todayKey();
+  const ex=[...main.exams].sort((a,b)=>a.date.localeCompare(b.date));
+  $('exam-list').innerHTML=ex.length?ex.map(e=>{
+    const d=daysBetween(tk,e.date), s=subj(e.sid), dt=new Date(e.date+'T00:00');
+    return `<li class="rem${d<0?' past':''}"><div class="when">${d<0?'考完了':d===0?'今天':d+' 天後'}<small>${dt.getMonth()+1}/${dt.getDate()}（${WD[dt.getDay()]}）</small></div>
+      <div>${s?`<span class="subj" style="--h:${s.h}">${esc(s.name)}</span> `:''}<b>${esc(e.title)}</b>${e.scope?`<div class="small muted">範圍：${esc(e.scope)}</div>`:''}</div>
+      <div class="row" style="gap:4px;justify-content:flex-end">${d>=0&&s?(noteForExam(e.id)?`<button class="go" data-opennote="${noteForExam(e.id)}">看段考重點</button>`:(ask?`<button class="go" data-examnote="${e.id}">整理段考重點</button>`:'')):''}<button class="link" data-edel="${e.id}">刪除</button></div></li>`}).join('')
+    :'<li class="muted small">還沒有考試。加上考試日期，讀書計劃就會自動幫你多排複習時間。</li>';
+  const nowD=now(), list=[...main.reminders].sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  $('rem-list').innerHTML=list.length?list.map(r=>{
+    const dt=new Date(r.date+'T'+r.time), past=dt<nowD, days=daysBetween(tk,r.date);
+    const rel=days===0?'今天':days===1?'明天':days===2?'後天':days>0?days+' 天後':'已經過了';
+    return `<li class="rem${past?' past':''}"><div class="when">${esc(r.time)}<small>${rel}・${+r.date.slice(5,7)}/${+r.date.slice(8)}（${WD[dt.getDay()]}）</small></div>
+      <div>${esc(r.text)}</div><button class="link" data-rdel="${r.id}">刪除</button></li>`}).join('')
+    :'<li class="muted small">還沒有提醒。</li>';
+}
+$('exam-form').addEventListener('submit',e=>{
+  e.preventDefault();
+  const x={id:uid('e'),sid:$('ne-subj').value,title:$('ne-title').value.trim(),date:$('ne-date').value,scope:$('ne-scope').value.trim()};
+  if(!x.sid||!x.title||!x.date) return;
+  main.exams.push(x); e.target.reset(); setFormDefaults(); saveMain();
+  const d=daysBetween(todayKey(),x.date);
+  toast(d>7?'考試加好了，考前一週會開始多排複習':'考試加好了，讀書計劃已經多排複習時間');
+});
+$('exam-list').addEventListener('click',e=>{const b=e.target.closest('[data-edel]');if(!b)return;main.exams=main.exams.filter(x=>x.id!==b.dataset.edel);saveMain()});
+$('rem-form').addEventListener('submit',e=>{
+  e.preventDefault();
+  const r={id:uid('r'),text:$('nr-text').value.trim(),date:$('nr-date').value,time:$('nr-time').value};
+  if(!r.text||!r.date||!r.time) return;
+  main.reminders.push(r); e.target.reset(); setFormDefaults(); saveMain(); toast('提醒加好了');
+});
+$('rem-list').addEventListener('click',e=>{const b=e.target.closest('[data-rdel]');if(!b)return;main.reminders=main.reminders.filter(r=>r.id!==b.dataset.rdel);saveMain()});
+function setFormDefaults(){
+  const d=now();d.setDate(d.getDate()+1);$('nr-date').value=dkey(d);$('nr-time').value='07:30';
+  const d2=now();d2.setDate(d2.getDate()+7);$('ne-date').value=dkey(d2);
+}
+
+/* ---------- parent ---------- */
+function renderParent(){
+  const td=now().getDay(), mon=dateForDow(1); if(td===0) mon.setDate(mon.getDate()-7);
+  let sumDone=0,sumTotal=0; const cols=[];
+  for(let i=0;i<7;i++){
+    const d=new Date(mon); d.setDate(mon.getDate()+i);
+    const dk=dkey(d), dow=d.getDay(), future=dk>todayKey();
+    const p=progress[dk]; let total=p&&p.total, count=p?p.count||0:0;
+    if(!total){total=buildPlanFor(d).filter(x=>x.kind!=='break').length}
+    if(!future){sumDone+=count;sumTotal+=total}
+    const pct=total?Math.min(1,count/total):0;
+    cols.push(`<div class="wd${dk===todayKey()?' today':''}"><div class="col${future?' future':''}" title="${count}/${total}"><i style="height:${pct*100}%"></i></div><b>${WD[dow]}</b><span>${future?'—':count+'/'+total}</span></div>`);
+  }
+  $('parent-week').innerHTML=cols.join('');
+  const ex=upcomingExams(todayKey()), nx=ex[0];
+  const allAtt=noteList().flatMap(n=>(n.attempts||[]).map(a=>a.score/a.total));
+  const avg=allAtt.length?Math.round(allAtt.reduce((a,b)=>a+b,0)/allAtt.length*100):null;
+  $('parent-stats').innerHTML=[
+    ['這週完成率',sumTotal?Math.round(sumDone/sumTotal*100)+'%':'—',`${sumDone}/${sumTotal} 項`],
+    ['下一場考試',nx?(nx.days===0?'今天':nx.days+' 天'):'—',nx?`${subj(nx.sid)?.name||''} ${nx.title}`:'沒有排考試'],
+    ['練習平均答對',avg==null?'—':avg+'%',`共練習 ${allAtt.length} 次`],
+    ['重點筆記',Object.keys(notes).length+' 份',main.school.grade||'年級未填']
+  ].map(([k,v,s])=>`<div class="stat"><div class="k">${k}</div><div class="v">${esc(v)}</div><div class="small muted">${esc(s)}</div></div>`).join('');
+  const rows=noteList().filter(n=>(n.attempts||[]).length);
+  $('parent-scores').innerHTML=rows.length?`<table class="scores"><thead><tr><th>科目</th><th>單元</th><th>練習次數</th><th>最近一次</th><th>最好</th></tr></thead><tbody>${rows.map(n=>{
+    const a=n.attempts, l=a[a.length-1], best=Math.max(...a.map(x=>x.score)), s=subj(n.sid);
+    return `<tr><td>${s?`<span class="subj" style="--h:${s.h}">${esc(s.name)}</span>`:''}</td><td>${esc(n.title||n.unit)}</td><td class="num">${a.length}</td><td class="num">${l.score}/${l.total}</td><td class="num">${best}/${l.total}</td></tr>`}).join('')}</tbody></table>`
+    :'<p class="muted small">孩子還沒有做過練習題。</p>';
+  $('sync-state').textContent=db?(synced?'和孩子的畫面即時同步':'正在連線……'):'只存在這台裝置上';
+}
+function buildPlanFor(d){const save=viewDow;const r=buildPlan(d.getDay());return r}
+$('msg-form').addEventListener('submit',e=>{
+  e.preventDefault(); const t=$('pm-text').value.trim(); if(!t) return;
+  main.message={text:t,at:new Date().toISOString(),read:false}; e.target.reset(); saveMain(); toast('孩子打開計劃時就會看到');
+});
+
+/* ---------- example data ---------- */
+let clearArmed2=false;
+$('clear-example').addEventListener('click',e=>{
+  if(!clearArmed2){clearArmed2=true;e.target.textContent='再按一次，範例會全部清掉';setTimeout(()=>{clearArmed2=false;e.target.textContent='清掉範例，開始填自己的'},3000);return}
+  main=normalize({subjects:main.subjects,school:main.school,settings:main.settings,periods:main.periods});
+  Object.keys(notes).forEach(id=>{if(notes[id].example) removeNote(id)});
+  Object.keys(progress).forEach(dk=>{delete progress[dk]; if(db) db.doc('progress/'+dk).delete().catch(()=>{})});
+  saveMain(); toast('範例清掉了。先填學校和年級，再填課表吧！'); showTab('tt');
+});
+
+/* ---------- sound & alerts ---------- */
+let ctx=null;
+$('sound-btn').addEventListener('click',e=>{
+  try{ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();ctx.resume();chime();e.target.textContent='提醒聲音已開啟';toast('聽到「叮咚」就代表聲音開好了')}
+  catch(err){toast('這個瀏覽器不能播放聲音，提醒還是會跳出來')}
+});
+function chime(){
+  if(!ctx) return;
+  [[880,0],[660,.28],[880,.56]].forEach(([f,t])=>{
+    const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.value=f;
+    g.gain.setValueAtTime(0,ctx.currentTime+t);g.gain.linearRampToValueAtTime(.25,ctx.currentTime+t+.02);
+    g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+t+.6);
+    o.connect(g).connect(ctx.destination);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+.65);
+  });
+}
+const fired=new Set(); let current=null;
+function showAlert(a){
+  current=a;
+  $('al-kicker').textContent=a.kicker||'時間到了';
+  $('al-title').textContent=a.title;
+  $('al-note').textContent=a.note||'';
+  $('overlay').hidden=false; chime(); $('al-ok').focus();
+  if(swReg&&'Notification' in window&&Notification.permission==='granted'&&document.visibilityState!=='visible'){
+    swReg.showNotification(a.title,{body:a.note||a.kicker||'',tag:'planner',icon:'icon-192.png'}).catch(()=>{});
+  }
+}
+$('al-ok').addEventListener('click',()=>{$('overlay').hidden=true;current=null;toast('加油！你可以的')});
+$('al-snooze').addEventListener('click',()=>{
+  const a=current; $('overlay').hidden=true; current=null;
+  setTimeout(()=>showAlert({...a,kicker:'再提醒你一次'}),5*60*1000); toast('5 分鐘後再提醒你');
+});
+$('test-btn').addEventListener('click',()=>{
+  toast('5 秒後會跳出提醒');
+  setTimeout(()=>showAlert({kicker:'試試看',title:'數學 考前複習',note:'小考還有 2 天・範圍：第 3 單元（25 分鐘）'}),5000);
+});
+function tick(){
+  const n=now(), hm=pad(n.getHours())+':'+pad(n.getMinutes()), dk=dkey(n);
+  $('clock').textContent=hm;
+  if(!$('overlay').hidden) return;
+  const done=(progress[dk]&&progress[dk].done)||{};
+  for(const it of buildPlan(n.getDay())){
+    const k=dk+it.id;
+    if(fmt(it.start)===hm&&!done[it.id]&&!fired.has(k)){
+      fired.add(k);
+      showAlert({title:it.kind==='break'?'休息時間':it.title,note:(it.kind==='break'?'離開書桌，喝口水、看看遠方':it.note)+`（${it.mins} 分鐘）`});
+      renderPlan(); return;
+    }
+  }
+  for(const e of main.exams){
+    const d=daysBetween(dk,e.date), s=subj(e.sid), k='x'+e.id+dk;
+    if(((d===1&&hm==='19:00')||(d===0&&hm==='07:00'))&&!fired.has(k)){
+      fired.add(k); showAlert({kicker:d===0?'今天考試':'明天考試',title:`${s?s.name:''} ${e.title}`,note:(e.scope?'範圍：'+e.scope+'。':'')+(d===0?'深呼吸，你準備好了！':'今晚早點睡，鉛筆和橡皮擦放進書包。')}); return;
+    }
+  }
+  for(const r of main.reminders){
+    const k='r'+r.id;
+    if(r.date===dk&&r.time===hm&&!fired.has(k)){fired.add(k);showAlert({kicker:'別忘了',title:r.text});return}
+  }
+}
+let lastMin=-1;
+setInterval(()=>{const m=now().getMinutes(); tick(); if(m!==lastMin){lastMin=m;renderPlan()}},5000);
+
+/* ---------- PWA (only in the installable build, which carries a manifest link) ---------- */
+let swReg=null, installEvt=null;
+if(document.querySelector('link[rel="manifest"]')&&'serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(r=>{swReg=r}).catch(()=>{});
+  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('install-banner').hidden=false;$('install-btn').hidden=false});
+  if('Notification' in window&&Notification.permission==='default'){$('install-banner').hidden=false;$('notify-btn').hidden=false;$('install-btn').hidden=true}
+}
+$('install-btn').addEventListener('click',async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice.catch(()=>{});installEvt=null;$('install-btn').hidden=true;if($('notify-btn').hidden)$('install-banner').hidden=true});
+$('notify-btn').addEventListener('click',async()=>{
+  try{const p=await Notification.requestPermission();toast(p==='granted'?'通知開好了':'沒有開通知，提醒還是會在畫面上跳出來')}catch(e){}
+  $('notify-btn').hidden=true; if($('install-btn').hidden) $('install-banner').hidden=true;
+});
+
+/* ---------- toast & tabs ---------- */
+let tt;
+function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2600)}
+function showTab(name){
+  document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected',x.dataset.tab===name));
+  ['plan','tt','notes','rem','parent'].forEach(p=>$('panel-'+p).hidden=p!==name);
+  if(name==='notes'){quiz=null;renderNotes()}
+  if(name!=='parent'&&(unlocked||changingPw)){unlocked=false;changingPw=false;lockErr=''}
+  if(name==='parent') renderLock();
+}
+document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(b)showTab(b.dataset.tab)});
+document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-goto]'); if(g){showTab(g.dataset.goto);return}
+  const x=e.target.closest('[data-examnote]'); if(x){genMode='exam';genExam=x.dataset.examnote;openNote=null;practiceFilter='';showTab('notes');return}
+  const o=e.target.closest('[data-opennote]'); if(o){openNote=o.dataset.opennote;showTab('notes')}
+});
+
+/* ---------- parent lock ---------- */
+let auth=null, authLoaded=false, unlocked=false, isOwner=false, lockErr='', changingPw=false, fails=0, lockUntil=0;
+const LAUTH='kid-study-planner-auth';
+async function sha(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+function loadLocalAuth(){try{auth=JSON.parse(localStorage.getItem(LAUTH))}catch(e){auth=null}authLoaded=true}
+const canSetAuth=()=>db?isOwner:true;
+function renderLock(){
+  const L=$('parent-lock'), C=$('parent-content');
+  $('pw-change').hidden=!canSetAuth();
+  if(unlocked&&!changingPw){L.innerHTML='';L.hidden=true;C.hidden=false;return}
+  C.hidden=true; L.hidden=false;
+  if(!authLoaded){L.innerHTML='<p class="muted">讀取中……</p>';return}
+  const setting=!auth||changingPw;
+  if(setting&&!canSetAuth()){
+    L.innerHTML=`<div class="empty"><b style="font-family:var(--f-display);font-size:20px;color:var(--ink)">家長看板還沒有設定密碼</b><span>請家長用自己的帳號打開這一頁，先設定家長帳號和密碼。</span></div>`;
+    return;
+  }
+  L.innerHTML=`<form class="form" id="lock-form" style="max-width:420px">
+    <div class="field full"><h2>${setting?'設定家長帳號密碼':'家長登入'}</h2>
+      <p class="muted small">${setting?(db?'設定之後，每台裝置都要輸入這組帳號密碼才能打開家長看板。':'密碼只存在這台裝置上。設定之後，要輸入帳號密碼才能打開家長看板。'):'這一頁是給爸媽看的，請輸入家長帳號和密碼。'}</p></div>
+    <div class="field full"><label for="lk-user">帳號</label><input id="lk-user" autocomplete="username" maxlength="30" required></div>
+    <div class="field full"><label for="lk-pw">密碼</label><input id="lk-pw" type="password" autocomplete="${setting?'new-password':'current-password'}" maxlength="40" required></div>
+    ${setting?'<div class="field full"><label for="lk-pw2">再輸入一次密碼</label><input id="lk-pw2" type="password" autocomplete="new-password" maxlength="40" required></div>':''}
+    ${lockErr?`<div class="field full"><div class="warnbox">${esc(lockErr)}</div></div>`:''}
+    <div class="row"><button class="btn primary" type="submit">${setting?'儲存並進入':'登入'}</button>${changingPw?'<button class="btn ghost" type="button" id="lk-cancel">取消</button>':''}</div>
+  </form>`;
+}
+$('parent-lock').addEventListener('submit',async e=>{
+  e.preventDefault(); lockErr='';
+  const u=$('lk-user').value.trim(), p=$('lk-pw').value;
+  if(!u||!p) return;
+  if(!auth||changingPw){
+    if(!canSetAuth()) return;
+    if(p.length<4){lockErr='密碼至少要 4 個字';return renderLock()}
+    if(p!==$('lk-pw2').value){lockErr='兩次輸入的密碼不一樣';return renderLock()}
+    const salt=uid('k'), a={user:u,salt,hash:await sha(salt+'|'+u+'|'+p),at:new Date().toISOString()};
+    if(db){try{await db.doc('parentlock/auth').set(a)}catch(err){lockErr='沒有存成功。只有這一頁的擁有者可以設定家長密碼。';return renderLock()}}
+    else{try{localStorage.setItem(LAUTH,JSON.stringify(a))}catch(err){}}
+    auth=a; unlocked=true; changingPw=false; renderLock(); renderParent(); toast('家長帳號密碼設定好了');
+    return;
+  }
+  if(Date.now()<lockUntil){lockErr='試太多次了，30 秒後再試。';return renderLock()}
+  const h=await sha(auth.salt+'|'+u+'|'+p);
+  if(u===auth.user&&h===auth.hash){fails=0;unlocked=true;renderLock();renderParent()}
+  else{fails++; if(fails>=5){fails=0;lockUntil=Date.now()+30000} lockErr='帳號或密碼不對。';renderLock()}
+});
+$('panel-parent').addEventListener('click',e=>{
+  if(e.target.id==='parent-lock-btn'){unlocked=false;lockErr='';renderLock();toast('家長看板鎖上了')}
+  if(e.target.id==='pw-change'){changingPw=true;lockErr='';renderLock()}
+  if(e.target.id==='lk-cancel'){changingPw=false;lockErr='';renderLock()}
+});
+
+/* ---------- render ---------- */
+function renderHeader(){
+  const n=now(), h=n.getHours();
+  $('today-label').textContent=`${n.getMonth()+1} 月 ${n.getDate()} 日・星期${WD[n.getDay()]}`+(main.school.name?'・'+main.school.name:'')+(main.school.grade?' '+main.school.grade:'');
+  $('greeting').textContent=h<11?'早安！今天也一起加油':h<17?'午安！放學後的計劃排好了':'晚安！來完成今天的計劃吧';
+  $('example-banner').hidden=!main.isExample;
+  ['start','hw','review','preview'].forEach(k=>setVal('set-'+k,main.settings[k]));
+}
+function renderAll(){renderHeader();renderPlan();renderTT();if(!quiz)renderNotes();renderRem();renderParent()}
+
+setFormDefaults(); renderAll(); tick(); renderLock();
+
+/* ---------- connect shared storage and Claude when the viewer offers them ---------- */
+if(window.claude&&window.claude.use){
+  window.claude.use('db').then(d=>{
+    if(!d){loadLocalAuth();renderLock();return} db=d;
+    db.doc('parentlock/auth').onSnapshot(s=>{
+      const was=JSON.stringify(auth);
+      if(s.exists) auth=s.data(); else if(!s.metadata.fromCache) auth=null; else return;
+      if(!authLoaded||JSON.stringify(auth)!==was){authLoaded=true;if(!unlocked)renderLock()}
+    },()=>{});
+    const err=e=>{if(e&&e.code==='revoked'){db=null;renderParent()}};
+    db.doc('planner/main').onSnapshot(s=>{
+      if(pending('planner/main')) return;
+      if(s.exists) main=normalize(s.data()); else if(!s.metadata.fromCache) main=normalize(null); else return;
+      synced=true; persistLocal(); renderAll();
+    },err);
+    db.collection('progress').orderBy('date','desc').limit(60).onSnapshot(q=>{
+      const p={}; q.docs.forEach(x=>{if(!pending('progress/'+x.id)) p[x.id]=x.data(); else p[x.id]=progress[x.id]}); progress=p;
+      persistLocal(); renderPlan(); renderParent();
+    },err);
+    db.collection('notes').onSnapshot(q=>{
+      const n={}; q.docs.forEach(x=>{n[x.id]=pending('notes/'+x.id)?notes[x.id]:x.data()}); notes=n;
+      persistLocal(); if(openNote&&!notes[openNote]) openNote=null; if(!quiz) renderNotes(); renderPlan(); renderParent();
+    },err);
+  }).catch(()=>{});
+  window.claude.use('sample').then(async s=>{
+    if(!s) return; ask=s;
+    try{const l=await s.limits(); imagesOK=!!(l&&l.images)}catch(e){}
+    if(!quiz) renderNotes();
+    renderTTPhoto();
+  }).catch(()=>{});
+  window.claude.use('user').then(async u=>{isOwner=u?await u.isOwner().catch(()=>false):false;renderLock()}).catch(()=>{});
+}else{loadLocalAuth();renderLock()}
+})();
+</script>
+
+</body>
+</html>

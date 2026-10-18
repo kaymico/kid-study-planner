@@ -1,0 +1,16 @@
+{
+  "name": "小書包讀書計劃",
+  "short_name": "小書包",
+  "description": "填課表、排讀書計劃、考試倒數和提醒",
+  "lang": "zh-Hant-TW",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#EEF3F9",
+  "theme_color": "#1C2742",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

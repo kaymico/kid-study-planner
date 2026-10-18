@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#1C2742">
+<meta name="theme-color" content="#3A2A1E">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -19,34 +19,37 @@
 <style>
 /* Layout: a contact-book (聯絡簿) page on grid paper — tabs on top, one working panel below */
 :root{
-  --bg:#EEF3F9; --grid:#DCE5F0; --paper:#FFFFFF; --ink:#1C2742; --muted:#5A6884; --line:#D3DCE8;
-  --primary:#2C62D6; --primary-ink:#FFFFFF; --primary-soft:#E3ECFC;
-  --sun:#FFC53A; --sun-ink:#3F2E00; --sun-soft:#FFF4D6;
-  --ok:#18915A; --ok-soft:#DDF3E8; --warn:#C25E00; --bad:#C8323C; --bad-soft:#FBE3E4;
-  --chip-l:89%; --chip-ink-l:26%; --shadow:0 1px 0 rgba(28,39,66,.06),0 6px 20px -10px rgba(28,39,66,.25);
+  --bg:#EAF4E6; --grid:#D3E7CC; --paper:#FFFDF8; --ink:#3A2A1E; --muted:#7A6656; --line:#E6D9C8;
+  --primary:#23938A; --primary-ink:#FFFFFF; --primary-soft:#DDF2EE;
+  --sun:#FFAE3B; --sun-ink:#4A2C00; --sun-soft:#FFF0D9;
+  --ok:#3E9B4F; --ok-soft:#E1F3DF; --warn:#C25E00; --bad:#D9483B; --bad-soft:#FCE4E0;
+  --capy:#B9824F; --capy-dark:#80542F; --capy-belly:#D9AA78; --blush:#FF9C86; --leaf:#4FA05A;
+  --chip-l:89%; --chip-ink-l:26%; --shadow:0 2px 0 rgba(58,42,30,.08),0 10px 24px -14px rgba(58,42,30,.35);
   --f-display:"LXGW WenKai TC","Kaiti TC","STKaiti","KaiTi",serif;
   --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#121827; --grid:#1B2337; --paper:#1A2235; --ink:#E8EDF7; --muted:#9AA7C0; --line:#2C3650;
-  --primary:#7FA6FF; --primary-ink:#0E1630; --primary-soft:#22305A;
-  --sun:#FFCF5C; --sun-ink:#2A1E00; --sun-soft:#3A3019;
-  --ok:#5BD49A; --ok-soft:#173A2B; --warn:#FFAA55; --bad:#FF8A8F; --bad-soft:#4A1F25;
+  --bg:#171C17; --grid:#222B22; --paper:#232A23; --ink:#F4EBDD; --muted:#B5A595; --line:#3B3A30;
+  --primary:#62CFC3; --primary-ink:#0E2422; --primary-soft:#1E3B38;
+  --sun:#FFBE5C; --sun-ink:#2E1C00; --sun-soft:#3A2F1C;
+  --ok:#7BD48A; --ok-soft:#1E3A22; --warn:#FFAA55; --bad:#FF8F82; --bad-soft:#47221E;
+  --capy:#C48F5C; --capy-dark:#8E5F36; --capy-belly:#DDB284; --blush:#E98A76; --leaf:#6CC077;
   --chip-l:30%; --chip-ink-l:88%; --shadow:0 1px 0 rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.6);
   color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#121827; --grid:#1B2337; --paper:#1A2235; --ink:#E8EDF7; --muted:#9AA7C0; --line:#2C3650;
-  --primary:#7FA6FF; --primary-ink:#0E1630; --primary-soft:#22305A;
-  --sun:#FFCF5C; --sun-ink:#2A1E00; --sun-soft:#3A3019;
-  --ok:#5BD49A; --ok-soft:#173A2B; --warn:#FFAA55; --bad:#FF8A8F; --bad-soft:#4A1F25;
+  --bg:#171C17; --grid:#222B22; --paper:#232A23; --ink:#F4EBDD; --muted:#B5A595; --line:#3B3A30;
+  --primary:#62CFC3; --primary-ink:#0E2422; --primary-soft:#1E3B38;
+  --sun:#FFBE5C; --sun-ink:#2E1C00; --sun-soft:#3A2F1C;
+  --ok:#7BD48A; --ok-soft:#1E3A22; --warn:#FFAA55; --bad:#FF8F82; --bad-soft:#47221E;
+  --capy:#C48F5C; --capy-dark:#8E5F36; --capy-belly:#DDB284; --blush:#E98A76; --leaf:#6CC077;
   --chip-l:30%; --chip-ink-l:88%; --shadow:0 1px 0 rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.6);
   color-scheme:dark}
 
 *{box-sizing:border-box}
 body{
   background:var(--bg); color:var(--ink); font-family:var(--f-body); font-size:15px; line-height:1.6;
-  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
-  background-size:24px 24px;
+  background-image:radial-gradient(var(--grid) 2px,transparent 2.5px);
+  background-size:22px 22px;
 }
 .wrap{max-width:900px;margin:0 auto;padding-block:20px 48px;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
@@ -66,6 +69,24 @@ header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:1
 .date{font-size:13px;color:var(--muted);letter-spacing:.06em}
 .clock{font-family:var(--f-display);font-size:28px;font-variant-numeric:tabular-nums;background:var(--paper);
   border:2px solid var(--ink);border-radius:12px;padding:2px 14px;box-shadow:3px 3px 0 var(--ink)}
+#parent-msg:empty,#exam-strip:empty{display:none}
+.hero{display:flex;gap:12px;align-items:flex-end;min-width:0}
+.hero .hello{min-width:0}
+.mascot{width:100px;flex:none;cursor:pointer;background:none;border:0;padding:0}
+.mascot svg,.capy svg{display:block;width:100%;height:auto}
+.mascot.hop{animation:hop .6s ease}
+@keyframes hop{0%,100%{transform:none}40%{transform:translateY(-14px) rotate(-5deg)}70%{transform:translateY(0) rotate(2deg)}}
+.bubble{position:relative;align-self:flex-start;background:var(--paper);border:2px solid var(--ink);border-radius:16px;padding:4px 12px;font-size:14px;margin-top:6px;margin-left:8px;max-width:100%}
+.bubble::before{content:"";position:absolute;left:-8px;bottom:9px;width:12px;height:12px;background:var(--paper);border-left:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(45deg)}
+.capy{display:block}
+.trail{position:relative;flex:1;height:46px;min-width:120px}
+.trail .track{position:absolute;left:0;right:30px;top:30px;height:12px;border-radius:99px;background:var(--paper);border:2px solid var(--ink);overflow:hidden}
+.trail .track i{display:block;height:100%;background:var(--sun);transition:width .4s}
+.trail .walker{position:absolute;top:0;width:46px;transform:translateX(-50%);transition:left .5s ease}
+.trail .onsen{position:absolute;right:0;top:14px;font-size:26px;line-height:1;color:var(--primary)}
+.celebrate{display:flex;gap:14px;align-items:center;background:var(--primary-soft);border-radius:18px;padding:12px 16px}
+.celebrate .capy{width:120px;flex:none}
+.celebrate b{font-family:var(--f-display);font-size:20px}
 .banner{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--sun-soft);border:2px dashed var(--sun-ink);border-radius:14px;padding:10px 14px;font-size:14px}
 .banner b{font-family:var(--f-display);font-size:16px}
 
@@ -74,7 +95,7 @@ nav.tabs{display:flex;gap:6px;flex-wrap:wrap}
 .tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
 .tab.parent{border-style:dashed}
 
-.panel{background:var(--paper);border:2px solid var(--ink);border-radius:18px;box-shadow:var(--shadow);
+.panel{background:var(--paper);border:2px solid var(--ink);border-radius:26px;box-shadow:var(--shadow);
   padding:20px;display:flex;flex-direction:column;gap:18px;min-width:0}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .between{justify-content:space-between}
@@ -238,7 +259,7 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
 @keyframes ring{0%,100%{transform:rotate(0)}20%{transform:rotate(18deg)}40%{transform:rotate(-16deg)}60%{transform:rotate(10deg)}80%{transform:rotate(-6deg)}}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--paper);
   padding:8px 18px;border-radius:99px;font-weight:700;z-index:60;font-size:14px;max-width:calc(100% - 32px);text-align:center}
-@media (prefers-reduced-motion:reduce){.alert,.bell,.dots i{animation:none}.bar>i{transition:none}}
+@media (prefers-reduced-motion:reduce){.alert,.bell,.dots i,.mascot.hop{animation:none}.bar>i,.trail .track i,.trail .walker{transition:none}}
 
 @media (max-width:620px){
   .subject-row{grid-template-columns:72px 1fr auto}
@@ -255,9 +276,13 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
 
 <div class="wrap">
   <header class="top">
-    <div class="hello">
-      <span class="date" id="today-label"></span>
-      <h1 id="greeting">今天也一起加油！</h1>
+    <div class="hero">
+      <button class="mascot" id="mascot" type="button" aria-label="水豚豚豚，點我說話"></button>
+      <div class="hello">
+        <span class="date" id="today-label"></span>
+        <h1 id="greeting">今天也一起加油！</h1>
+        <div class="bubble" id="capy-say" aria-live="polite"></div>
+      </div>
     </div>
     <div class="clock" id="clock" aria-label="現在時間">--:--</div>
   </header>
@@ -402,7 +427,7 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
 
 <div class="overlay" id="overlay" hidden>
   <div class="alert" role="alertdialog" aria-labelledby="al-title">
-    <div><span class="bell" aria-hidden="true">🔔</span></div>
+    <div class="bell capy" id="al-capy" style="width:130px;margin:0 auto" aria-hidden="true"></div>
     <div class="label" id="al-kicker">時間到了</div>
     <h2 id="al-title"></h2>
     <p class="muted" id="al-note"></p>
@@ -554,7 +579,7 @@ function renderPlan(){
   $('plan-title').textContent=(isToday?'今天':'星期'+WD[viewDow])+'的讀書計劃';
   const hasTT=[1,2,3,4,5].some(d=>(main.timetable[d]||[]).some(Boolean));
   if(!hasTT&&!main.exams.length){
-    $('plan-body').innerHTML=`<div class="empty"><b style="font-family:var(--f-display);font-size:20px;color:var(--ink)">還沒有課表</b>
+    $('plan-body').innerHTML=`<div class="empty"><div class="capy" style="width:120px">${capy('sleep')}</div><b style="font-family:var(--f-display);font-size:20px;color:var(--ink)">還沒有課表</b>
       <span>把每天上什麼課填進去，這裡就會自動排出放學後要讀什麼。</span>
       <button class="btn" data-goto="tt">去填課表</button></div>`;
     return;
@@ -591,9 +616,10 @@ function renderPlan(){
   const total=tasks.length, pct=total?nDone/total:0, starN=Math.round(pct*5);
   $('plan-body').innerHTML=`<div style="display:flex;flex-direction:column;gap:14px">
     <div class="progress"><span class="stars">${'★'.repeat(starN)}<span class="off">${'★'.repeat(5-starN)}</span></span>
-      <div class="bar"><i style="width:${pct*100}%"></i></div>
+      <div class="trail" aria-hidden="true"><div class="track"><i style="width:${pct*100}%"></i></div><div class="walker" style="left:calc(23px + (100% - 53px) * ${pct})">${capy(pct===1?'happy':'normal')}</div><span class="onsen">♨</span></div>
       <b style="font-variant-numeric:tabular-nums;white-space:nowrap">${nDone}/${total}${nDone===total&&total?' 全部完成！':''}</b></div>
-    ${items.length?`<ol class="plan">${list}</ol>`:'<div class="empty">這天沒有排讀書，好好休息！</div>'}
+    ${total&&nDone===total?`<div class="celebrate"><div class="capy">${capy('happy',true)}</div><div><b>全部完成！</b><br>豚豚去泡溫泉了，你也好好休息吧。</div></div>`:''}
+    ${items.length?`<ol class="plan">${list}</ol>`:`<div class="empty"><div class="capy" style="width:120px">${capy('sleep')}</div>這天沒有排讀書，好好休息！</div>`}
     ${bagHTML()}</div>`;
 }
 function bagHTML(){
@@ -617,7 +643,7 @@ $('panel-plan').addEventListener('click',e=>{
     const tasks=buildPlan(viewDow).filter(i=>i.kind!=='break');
     p.total=tasks.length; p.count=tasks.filter(i=>p.done[i.id]).length; p.date=dk;
     progress[dk]=p; saveProgress(dk); renderPlan(); renderParent();
-    if(p.done[c.dataset.id]) toast(p.count===p.total?'今天全部完成！好厲害 ★★★':'好棒！完成一項 ★');
+    if(p.done[c.dataset.id]) toast(p.count===p.total?'全部完成！豚豚泡溫泉去了 ♨':'好棒！豚豚往溫泉走了一步');
     return;
   }
   const pr=e.target.closest('[data-practice]'); if(pr){practiceFilter=pr.dataset.practice;openNote=null;showTab('notes');return}
@@ -822,6 +848,7 @@ function renderQuiz(v){
   if(quiz.i>=n.questions.length||!q){
     const total=n.questions.length;
     v.innerHTML=`<div class="quiz" style="text-align:center;align-items:center">
+      <div class="capy" style="width:130px">${capy(quiz.score/total>=0.6?'happy':'normal')}</div>
       <div class="stars" style="font-size:34px">${'★'.repeat(Math.round(quiz.score/total*5))}<span class="off">${'★'.repeat(5-Math.round(quiz.score/total*5))}</span></div>
       <div class="q">答對 ${quiz.score} / ${total} 題</div>
       <p class="muted">${quiz.score===total?'全部答對，太厲害了！':quiz.score>=total*0.6?'很不錯！錯的那幾題再看一次重點。':'沒關係，回去看看重點再練一次。'}</p>
@@ -1189,6 +1216,41 @@ $('panel-parent').addEventListener('click',e=>{
   if(e.target.id==='parent-lock-btn'){unlocked=false;lockErr='';renderLock();toast('家長看板鎖上了')}
   if(e.target.id==='pw-change'){changingPw=true;lockErr='';renderLock()}
   if(e.target.id==='lk-cancel'){changingPw=false;lockErr='';renderLock()}
+});
+
+/* ---------- mascot ---------- */
+function capy(mood,spa){
+  const eye=mood==='happy'?'<path d="M21 37q4.5-6 9 0" fill="none" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round"/>'
+    :mood==='sleep'?'<path d="M21 38h9" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round"/>'
+    :'<circle cx="26" cy="37" r="3.2" fill="var(--ink)"/><circle cx="27.2" cy="35.8" r="1.1" fill="#fff"/>';
+  const extra=mood==='sleep'?'<text x="60" y="22" font-size="15" font-weight="700" fill="var(--muted)" font-family="sans-serif">z z</text>'
+    :mood==='alert'?'<text x="62" y="26" font-size="24" font-weight="700" fill="var(--bad)" font-family="sans-serif">!</text>':'';
+  const legs=spa?'':'<rect x="34" y="70" width="11" height="16" rx="5.5" fill="var(--capy-dark)"/><rect x="52" y="72" width="11" height="14" rx="5.5" fill="var(--capy-dark)"/><rect x="80" y="72" width="11" height="14" rx="5.5" fill="var(--capy-dark)"/><rect x="96" y="70" width="11" height="16" rx="5.5" fill="var(--capy-dark)"/>';
+  const water=spa?'<path d="M0 64q15-7 30 0t30 0 30 0 30 0V90H0z" fill="var(--primary)" opacity=".85"/><path d="M86 22q-4-6 0-12M98 24q-4-6 0-12M110 22q-4-6 0-12" fill="none" stroke="var(--muted)" stroke-width="2.2" stroke-linecap="round" opacity=".7"/>':'';
+  return `<svg viewBox="0 0 120 90" aria-hidden="true">${legs}
+    <ellipse cx="68" cy="55" rx="44" ry="26" fill="var(--capy)"/>
+    <ellipse cx="72" cy="66" rx="30" ry="11" fill="var(--capy-belly)" opacity=".55"/>
+    <ellipse cx="42" cy="23" rx="6.5" ry="5.5" fill="var(--capy-dark)"/>
+    <path d="M7 38q0-20 28-20q22 0 24 22l1 20q-24 6-42 2q-11-3-11-16z" fill="var(--capy)"/>
+    <ellipse cx="10.5" cy="43" rx="3.6" ry="2.5" fill="var(--capy-dark)"/>
+    <path d="M10 53q5 3 10 0" fill="none" stroke="var(--capy-dark)" stroke-width="2" stroke-linecap="round"/>
+    ${eye}
+    <ellipse cx="22" cy="47" rx="4.6" ry="2.8" fill="var(--blush)" opacity=".75"/>
+    <circle cx="30" cy="11" r="9" fill="var(--sun)"/><path d="M30 3q6-6 12-2q-5 5-12 2z" fill="var(--leaf)"/>
+    ${extra}${water}</svg>`;
+}
+const CAPY_LINES=['慢慢來也沒關係，一起加油！','每完成一項，我就往溫泉走一步 ♨','累了就休息一下，喝口水吧','頭上的柚子香香的～','考試前一週，我會幫你多排複習','不會的題目先做記號，明天問老師','寫完作業再積木、滑手機比較安心喔'];
+let capyLine=-1;
+function capySay(){
+  let i; do{i=Math.floor(Math.random()*CAPY_LINES.length)}while(i===capyLine&&CAPY_LINES.length>1);
+  capyLine=i; $('capy-say').textContent=CAPY_LINES[i];
+}
+$('mascot').innerHTML=capy('normal');
+$('al-capy').innerHTML=capy('alert');
+$('capy-say').textContent='我是豚豚，今天也慢慢來！';
+$('mascot').addEventListener('click',()=>{
+  const m=$('mascot'); m.classList.remove('hop'); void m.offsetWidth; m.classList.add('hop');
+  m.innerHTML=capy('happy'); setTimeout(()=>{m.innerHTML=capy('normal')},900); capySay();
 });
 
 /* ---------- render ---------- */

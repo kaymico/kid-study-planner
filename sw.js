@@ -1,5 +1,5 @@
 // App-shell cache: the planner works offline once it has been opened.
-const CACHE = 'kid-planner-v3';
+const CACHE = 'kid-planner-v4';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

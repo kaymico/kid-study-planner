@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#3A2A1E">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon.svg?v=3" type="image/svg+xml">
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon-v3.png">
+<link rel="icon" href="icon.svg?v=4" type="image/svg+xml">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon-v4.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="小書包">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
@@ -104,6 +104,8 @@ header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:1
 .flash{border:2px solid var(--ink);border-radius:20px;min-height:180px;display:grid;place-items:center;text-align:center;padding:20px;cursor:pointer;background:var(--paper)}
 .flash .w{font-family:var(--f-display);font-size:34px;line-height:1.2;overflow-wrap:anywhere}
 .reply-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.mini{display:inline-block;width:30px;flex:none;margin:-4px 0}
+.mini svg{display:block;width:100%;height:auto}
 .hero{display:flex;gap:12px;align-items:flex-end;min-width:0}
 .hero .hello{min-width:0}
 .mascot{width:100px;flex:none;cursor:pointer;background:none;border:0;padding:0}
@@ -728,7 +730,7 @@ function renderPlan(){
   $('plan-title').textContent=(isToday?'今天':'星期'+WD[viewDow])+'的讀書計劃';
   const hasTT=[1,2,3,4,5].some(d=>(main.timetable[d]||[]).some(Boolean));
   if(!hasTT&&!main.exams.length){
-    $('plan-body').innerHTML=`<div class="empty"><div class="capy" style="width:120px">${capy('sleep')}</div><b style="font-family:var(--f-display);font-size:20px;color:var(--ink)">還沒有課表</b>
+    $('plan-body').innerHTML=`<div class="empty"><div class="capy" style="width:120px">${sticker('sleep')}</div><b style="font-family:var(--f-display);font-size:20px;color:var(--ink)">還沒有課表</b>
       <span>把每天上什麼課填進去，這裡就會自動排出放學後要讀什麼。</span>
       <button class="btn" data-goto="tt">去填課表</button></div>`;
     return;
@@ -752,6 +754,7 @@ function renderPlan(){
     }
     const s=it.sid?subj(it.sid):null;
     const tag=s?`<span class="subj" style="--h:${s.h}">${esc(s.name)}</span>`:'';
+    const stk=`<span class="mini" aria-hidden="true">${sticker(isDone?'happy':KIND_STICKER[it.kind]||'normal')}</span>`;
     const kind={redo:it.title,cap:it.title.split(' ').slice(1).join(' '),wrong:'錯題複習',hw:'作業',review:it.title.includes('一週')?'一週複習':'複習',preview:'預習',pack:'書包',exam:'考前複習'}[it.kind]||it.title;
     const en=it.exam&&noteForExam(it.exam.id);
     const mockOk=it.exam&&it.exam.days<=3&&mockCandidates().some(c=>c.e.id===it.exam.id);
@@ -765,7 +768,7 @@ function renderPlan(){
     const fm=(progress[dk]&&progress[dk].focus&&progress[dk].focus[it.id])||0;
     return `<li class="${cls}">
       <div class="time">${fmt(it.start)}<small>${it.mins} 分鐘</small></div>
-      <div class="what"><div class="t">${tag}<span class="title">${esc(isBreak?it.title:(s?kind:it.title))}</span>${badge}</div>
+      <div class="what"><div class="t">${stk}${tag}<span class="title">${esc(isBreak?it.title:(s?kind:it.title))}</span>${badge}</div>
       <div class="n">${esc(it.kind==='activity'?it.note+'，讀書計劃會避開這段時間':isBreak?'離開書桌，喝口水、看看遠方':it.note)}${fm?`（專注了 ${fm} 分鐘）`:''}</div>${practice}<span class="row" style="gap:12px">${focusBtn}${moveBtn}</span></div>
       ${isBreak?'<span></span>':`<button class="check" data-id="${it.id}" aria-pressed="${isDone}" aria-label="${isDone?'取消完成':'完成'}：${esc(it.title)}" ${readOnly?'disabled':''}>${isDone?'✓':''}</button>`}
     </li>`}).join('');
@@ -776,8 +779,8 @@ function renderPlan(){
     <div class="progress"><span class="stars">${'★'.repeat(starN)}<span class="off">${'★'.repeat(5-starN)}</span></span>
       <div class="trail" aria-hidden="true"><div class="track"><i style="width:${pct*100}%"></i></div><div class="walker" style="left:calc(23px + (100% - 53px) * ${pct})">${capy(pct===1?'happy':'normal')}</div><span class="onsen">♨</span></div>
       <b style="font-variant-numeric:tabular-nums;white-space:nowrap">${nDone}/${total}${nDone===total&&total?' 全部完成！':''}</b></div>
-    ${total&&nDone===total?`<div class="celebrate"><div class="capy">${capy('happy',true)}</div><div><b>全部完成！</b><br>豚豚去泡溫泉了，你也好好休息吧。</div></div>`:''}
-    ${items.length?`<ol class="plan">${list}</ol>`:`<div class="empty"><div class="capy" style="width:120px">${capy('sleep')}</div>這天沒有排讀書，好好休息！</div>`}
+    ${total&&nDone===total?`<div class="celebrate"><div class="capy">${sticker('onsen')}</div><div><b>全部完成！</b><br>豚豚去泡溫泉了，你也好好休息吧。</div></div>`:''}
+    ${items.length?`<ol class="plan">${list}</ol>`:`<div class="empty"><div class="capy" style="width:120px">${sticker('sleep')}</div>這天沒有排讀書，好好休息！</div>`}
     ${items.movedOut&&items.movedOut.length?`<div class="bag" style="border-color:var(--line)"><div class="label">已經改到週末</div>${items.movedOut.map(m=>`<div class="row between"><span>${esc(m.title)}（${m.mins} 分鐘）</span><button class="go" data-unmove="${m.id}">放回今天</button></div>`).join('')}</div>`:''}
     ${items.lightened&&items.lightened.length?`<div class="note">今天比較累，預習先跳過：${items.lightened.map(esc).join('、')}。早點休息！</div>`:''}
     ${items.overflow&&items.overflow.length?`<div class="warnbox">已經超過 ${esc(main.settings.bedtime||'22:30')}，這些今天排不下：${items.overflow.map(esc).join('、')}。可以改到週末讀，或把每科的分鐘數調少一點。</div>`:''}
@@ -809,8 +812,8 @@ $('panel-plan').addEventListener('click',e=>{
   const by=e.target.closest('[data-buy]'); if(by){const it=CLOSET.find(c=>c[0]===by.dataset.buy); if(!it) return;
     if(yuzuBalance()<it[2]){toast('柚子還不夠喔');return}
     if(buyArmed!==it[0]){buyArmed=it[0];renderPlan();setTimeout(()=>{if(buyArmed===it[0]){buyArmed=null;renderPlan()}},3000);return}
-    buyArmed=null; main.closet.owned=uniq([...(main.closet.owned||[]),it[0]]); main.closet.wearing=it[0]; saveMain(); $('mascot').innerHTML=capy('happy'); toast(`豚豚戴上${it[1]}了！`); return}
-  const wr=e.target.closest('[data-wear]'); if(wr){main.closet.wearing=main.closet.wearing===wr.dataset.wear?'':wr.dataset.wear; saveMain(); $('mascot').innerHTML=capy('normal'); return}
+    buyArmed=null; main.closet.owned=uniq([...(main.closet.owned||[]),it[0]]); main.closet.wearing=it[0]; saveMain(); $('mascot').innerHTML=sticker('happy'); toast(`豚豚戴上${it[1]}了！`); return}
+  const wr=e.target.closest('[data-wear]'); if(wr){main.closet.wearing=main.closet.wearing===wr.dataset.wear?'':wr.dataset.wear; saveMain(); $('mascot').innerHTML=sticker('normal'); return}
   const mv=e.target.closest('[data-move]'); if(mv){moveToWeekend(mv.dataset.move);return}
   const um=e.target.closest('[data-unmove]'); if(um){undoMove(um.dataset.unmove);return}
   const c=e.target.closest('.check');
@@ -1043,7 +1046,7 @@ function renderFlash(v){
 }
 function renderSpell(v){
   const n=notes[spell.nid]; if(!n){spell=null;return renderNotes()}
-  if(spell.i>=spell.order.length){v.innerHTML=`<div class="quiz" style="text-align:center;align-items:center"><div class="capy" style="width:130px">${capy(spell.score/spell.order.length>=0.6?'happy':'normal')}</div>
+  if(spell.i>=spell.order.length){v.innerHTML=`<div class="quiz" style="text-align:center;align-items:center"><div class="capy" style="width:130px">${sticker(spell.score/spell.order.length>=0.6?'happy':'normal')}</div>
     <div class="q">拼對 ${spell.score} / ${spell.order.length} 個</div><p class="muted">${spell.miss.length?'要再練的：'+spell.miss.map(esc).join('、'):'全部拼對，太厲害了！'}</p>
     <div class="row" style="justify-content:center"><button class="btn primary" id="sp-again">再考一次</button><button class="btn ghost" id="sp-exit">回到單字表</button></div></div>`; return}
   const c=n.cards[spell.order[spell.i]];
@@ -1082,7 +1085,7 @@ function renderQuiz(v){
   if(quiz.i>=total||!cur){
     const r=total?quiz.score/total:0, got=quiz.score+quiz.cleared*2;
     v.innerHTML=`<div class="quiz" style="text-align:center;align-items:center">
-      <div class="capy" style="width:130px">${capy(r>=0.6?'happy':'normal')}</div>
+      <div class="capy" style="width:130px">${sticker(r>=0.6?'happy':'normal')}</div>
       <div class="stars" style="font-size:34px">${'★'.repeat(Math.round(r*5))}<span class="off">${'★'.repeat(5-Math.round(r*5))}</span></div>
       <div class="q">答對 ${quiz.score} / ${total} 題</div>
       <p class="muted">${quiz.review?(quiz.cleared?`有 ${quiz.cleared} 題從錯題本畢業了！`:'')+`錯題本還有 ${wrongList().length} 題。`
@@ -1418,7 +1421,7 @@ function showAlert(a){
   $('al-note').textContent=a.note||'';
   $('overlay').hidden=false; chime(); $('al-ok').focus();
   if(swReg&&'Notification' in window&&Notification.permission==='granted'&&document.visibilityState!=='visible'){
-    swReg.showNotification(a.title,{body:a.note||a.kicker||'',tag:'planner',icon:'icon-v3-192.png'}).catch(()=>{});
+    swReg.showNotification(a.title,{body:a.note||a.kicker||'',tag:'planner',icon:'icon-v4-192.png'}).catch(()=>{});
   }
 }
 $('al-ok').addEventListener('click',()=>{$('overlay').hidden=true;current=null;toast('加油！你可以的')});
@@ -1504,8 +1507,8 @@ const MOODS=[['good','狀態不錯','happy'],['ok','普普通通','normal'],['ti
 function moodHTML(dk){
   const m=progress[dk]&&progress[dk].mood;
   if(m&&!moodEdit){const x=MOODS.find(y=>y[0]===m)||MOODS[1];
-    return `<div class="mood"><div class="capy" style="width:46px">${capy(x[2])}</div><span>今天：<b>${x[1].replace('今天','')}</b>${m==='tired'?'，預習先跳過，作業和複習照常':''}</span><button class="go" id="mood-edit">改一下</button></div>`}
-  return `<div class="mood"><b style="font-family:var(--f-display);font-size:18px">今天感覺怎麼樣？</b><div class="row">${MOODS.map(x=>`<button class="mood-btn" data-mood="${x[0]}" aria-pressed="${m===x[0]}"><span class="capy">${capy(x[2])}</span>${x[1]}</button>`).join('')}</div></div>`;
+    return `<div class="mood"><div class="capy" style="width:46px">${sticker(x[2])}</div><span>今天：<b>${x[1].replace('今天','')}</b>${m==='tired'?'，預習先跳過，作業和複習照常':''}</span><button class="go" id="mood-edit">改一下</button></div>`}
+  return `<div class="mood"><b style="font-family:var(--f-display);font-size:18px">今天感覺怎麼樣？</b><div class="row">${MOODS.map(x=>`<button class="mood-btn" data-mood="${x[0]}" aria-pressed="${m===x[0]}"><span class="capy">${sticker(x[2])}</span>${x[1]}</button>`).join('')}</div></div>`;
 }
 let moodEdit=false;
 
@@ -1572,7 +1575,7 @@ function closetHTML(){
   const c=main.closet||{owned:[],wearing:''}, bal=yuzuBalance();
   return `<div><div class="label" style="margin-bottom:6px">豚豚衣櫃</div><div class="closet">${CLOSET.map(([k,name,cost])=>{
     const own=(c.owned||[]).includes(k), wear=c.wearing===k;
-    const prev=main.closet; main.closet={...c,wearing:k}; const img=capy('normal'); main.closet=prev;
+    const prev=main.closet; main.closet={...c,wearing:k}; const img=sticker('normal'); main.closet=prev;
     return `<div class="cl-item${wear?' wearing':''}"><span class="capy">${img}</span><span>${name}</span>
       ${own?`<button class="btn ${wear?'primary':'ghost'}" data-wear="${k}" style="padding:2px 10px">${wear?'脫下':'穿上'}</button>`
         :`<button class="btn ${bal>=cost?'sun':'ghost'}" data-buy="${k}" style="padding:2px 10px" ${readOnly?'disabled':''}><span class="cost">${buyArmed===k?'確定買？':yuzu(14)+' '+cost}</span></button>`}</div>`}).join('')}</div></div>`;
@@ -1758,7 +1761,7 @@ function startFocus(itemId){
   const dk=dkey(dateForDow(viewDow)), it=buildPlan(viewDow).find(i=>i.id===itemId); if(!it) return;
   const ms=it.mins*60000;
   focus={dk,id:it.id,title:it.title,total:ms,left:ms,endAt:Date.now()+ms,paused:false,elapsed:0,runStart:Date.now(),hiddenAt:null,leaves:0};
-  $('fc-title').textContent=it.title; $('fc-kicker').textContent='專注中'; $('fc-capy').innerHTML=capy('normal');
+  $('fc-title').textContent=it.title; $('fc-kicker').textContent='專注中'; $('fc-capy').innerHTML=sticker('study');
   $('fc-note').textContent='手機放旁邊，豚豚陪你一起讀。'; $('fc-pause').textContent='暫停';
   $('focus').hidden=false; tickFocus();
   try{ if(navigator.wakeLock) navigator.wakeLock.request('screen').then(w=>{wakeLock=w}).catch(()=>{}) }catch(e){}
@@ -1804,9 +1807,9 @@ document.addEventListener('visibilitychange',()=>{
   const sec=Math.round((Date.now()-focus.hiddenAt)/1000); focus.hiddenAt=null;
   if(sec<10) return;
   focus.leaves++;
-  $('fc-capy').innerHTML=capy('alert');
+  $('fc-capy').innerHTML=sticker('alert');
   $('fc-note').textContent=`豚豚發現你離開了 ${sec>=60?Math.round(sec/60)+' 分鐘':sec+' 秒'}，回來繼續加油！`;
-  setTimeout(()=>{if(focus)$('fc-capy').innerHTML=capy('normal')},4000);
+  setTimeout(()=>{if(focus)$('fc-capy').innerHTML=sticker('study')},4000);
 });
 
 /* ---------- weekly summary ---------- */
@@ -2067,19 +2070,66 @@ function capy(mood,spa){
     ${typeof accSVG==='function'&&typeof main!=='undefined'&&main.closet&&main.closet.wearing==='hat'?'':`<circle cx="40" cy="17" r="8.5" fill="var(--sun)" stroke="${L}" stroke-width="2.4"/><path d="M40 9q6-6 12-2q-5 5-12 2z" fill="var(--leaf)" stroke="${L}" stroke-width="1.6" stroke-linejoin="round"/>`}
     ${typeof accSVG==='function'?accSVG():''}${extra}${water}</svg>`;
 }
+/* front-facing chibi stickers: one face, a prop per situation */
+const KIND_STICKER={hw:'write',review:'study',preview:'study',cap:'study',redo:'study',wrong:'think',exam:'cheer',break:'tea',pack:'bag',activity:'bag'};
+function sticker(kind){
+  const L='var(--capy-line)', w=3;
+  const happy=['happy','cheer','onsen','tea'].includes(kind), sleepy=kind==='sleep', alert=kind==='alert';
+  const eyes=sleepy?`<path d="M38 53q6 4 12 0M70 53q6 4 12 0" fill="none" stroke="${L}" stroke-width="3" stroke-linecap="round"/>`
+    :happy?`<path d="M38 55q6-7 12 0M70 55q6-7 12 0" fill="none" stroke="${L}" stroke-width="3" stroke-linecap="round"/>`
+    :alert?`<circle cx="44" cy="51" r="4.4" fill="${L}"/><circle cx="76" cy="51" r="4.4" fill="${L}"/><circle cx="45.5" cy="49.5" r="1.5" fill="#fff"/><circle cx="77.5" cy="49.5" r="1.5" fill="#fff"/>`
+    :`<circle cx="44" cy="52" r="3.5" fill="${L}"/><circle cx="76" cy="52" r="3.5" fill="${L}"/>`;
+  const ears=`<ellipse cx="36" cy="26" rx="8" ry="7" fill="var(--capy-dark)" stroke="${L}" stroke-width="${w}"/><ellipse cx="84" cy="26" rx="8" ry="7" fill="var(--capy-dark)" stroke="${L}" stroke-width="${w}"/>`;
+  const feet=`<ellipse cx="44" cy="110" rx="9" ry="5" fill="var(--capy-dark)" stroke="${L}" stroke-width="2.6"/><ellipse cx="76" cy="110" rx="9" ry="5" fill="var(--capy-dark)" stroke="${L}" stroke-width="2.6"/>`;
+  const body=`<path d="M18 72C18 38 38 20 60 20S102 38 102 72c0 27-16 38-42 38S18 99 18 72z" fill="var(--capy)" stroke="${L}" stroke-width="${w}"/>
+    <ellipse cx="60" cy="69" rx="17" ry="13" fill="var(--capy-dark)" opacity=".5"/>${eyes}
+    <rect x="56.5" y="59" width="7" height="13" rx="3.5" fill="${L}"/>
+    <path d="M53 78q7 5 14 0" fill="none" stroke="${L}" stroke-width="2.6" stroke-linecap="round"/>
+    <ellipse cx="32" cy="65" rx="5.5" ry="3.3" fill="var(--blush)" opacity=".75"/><ellipse cx="88" cy="65" rx="5.5" ry="3.3" fill="var(--blush)" opacity=".75"/>`;
+  const arm=(x,y,r)=>`<ellipse cx="${x}" cy="${y}" rx="7" ry="9.5" transform="rotate(${r} ${x} ${y})" fill="var(--capy)" stroke="${L}" stroke-width="2.6"/>`;
+  const armsDown=arm(33,90,30)+arm(87,90,-30), armsHold=arm(38,92,60)+arm(82,92,-60), armsUp=arm(22,52,-25)+arm(98,52,25);
+  const yuzu=`<circle cx="60" cy="14" r="8" fill="var(--sun)" stroke="${L}" stroke-width="2.4"/><path d="M60 6q6-6 12-2q-5 5-12 2z" fill="var(--leaf)" stroke="${L}" stroke-width="1.6" stroke-linejoin="round"/>`;
+  const steam=`<path d="M30 14q-4-6 0-12M60 8q-4-6 0-12M90 14q-4-6 0-12" fill="none" stroke="var(--muted)" stroke-width="2.4" stroke-linecap="round" opacity=".6"/>`;
+  let back='', front='', hatOwn=false, arms=armsDown, legs=feet;
+  if(kind==='study'){front=`<path d="M32 84l28 7 28-7v22l-28 7-28-7z" fill="#fff" stroke="${L}" stroke-width="2.6" stroke-linejoin="round"/><path d="M60 91v22" stroke="${L}" stroke-width="2"/><path d="M38 92l16 4M38 98l16 4M66 96l16-4M66 102l16-4" stroke="var(--line)" stroke-width="2"/>`;arms=armsHold}
+  if(kind==='write'){front=`<rect x="30" y="88" width="60" height="22" rx="3" fill="#fff" stroke="${L}" stroke-width="2.6"/><path d="M38 96h34M38 102h24" stroke="var(--line)" stroke-width="2.2"/><path d="M76 92l16-18 6 5-16 18-8 3z" fill="var(--sun)" stroke="${L}" stroke-width="2.2" stroke-linejoin="round"/>`;arms=armsHold}
+  if(kind==='tea'){front=`<path d="M47 86h26v14a9 9 0 0 1-9 9h-8a9 9 0 0 1-9-9z" fill="#fff" stroke="${L}" stroke-width="2.6"/><path d="M73 90q8 0 8 6.5t-8 6.5" fill="none" stroke="${L}" stroke-width="2.6"/><path d="M54 82q-3-5 0-9M64 82q-3-5 0-9" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" opacity=".7"/>`;arms=armsHold}
+  if(kind==='bag'){front=`<rect x="40" y="84" width="40" height="28" rx="8" fill="#E8735E" stroke="${L}" stroke-width="2.6"/><path d="M40 96h40" stroke="${L}" stroke-width="2.2"/><rect x="55" y="92" width="10" height="8" rx="2" fill="var(--sun)" stroke="${L}" stroke-width="1.8"/>`;arms=armsHold}
+  if(kind==='cheer'){front=`<path d="M22 45q38-16 76 0l-1 8q-37-15-74 0z" fill="#E0584F" stroke="${L}" stroke-width="2.2" stroke-linejoin="round"/><text x="60" y="47" font-size="10" font-weight="700" text-anchor="middle" fill="#fff" font-family="sans-serif">必勝</text>`;arms=armsUp}
+  if(kind==='think'){front=`<circle cx="98" cy="92" r="10" fill="#fff" fill-opacity=".5" stroke="${L}" stroke-width="2.6"/><path d="M90 100l-8 8" stroke="${L}" stroke-width="4" stroke-linecap="round"/><text x="96" y="30" font-size="20" font-weight="700" fill="var(--muted)" font-family="sans-serif">?</text>`;arms=arm(33,90,30)+arm(88,92,-55)}
+  if(kind==='alert') front=`<text x="98" y="30" font-size="26" font-weight="700" fill="var(--bad)" font-family="sans-serif">!</text>`;
+  if(kind==='happy') front=`<path d="M100 22c-3-6-11-3-8 3l8 8 8-8c3-6-5-9-8-3z" fill="#F2667A" stroke="${L}" stroke-width="1.8"/>`;
+  if(kind==='sleep'){hatOwn=true; back=`<path d="M38 28q16-30 50-14q-10 3-12 14z" fill="#7FA6E8" stroke="${L}" stroke-width="2.4" stroke-linejoin="round"/><circle cx="90" cy="14" r="4.5" fill="#fff" stroke="${L}" stroke-width="2"/>`;
+    front=`<text x="94" y="40" font-size="14" font-weight="700" fill="var(--muted)" font-family="sans-serif">z</text><text x="102" y="28" font-size="11" font-weight="700" fill="var(--muted)" font-family="sans-serif">z</text>`}
+  if(kind==='onsen'){hatOwn=true; legs=''; arms='';
+    front=`<ellipse cx="60" cy="80" rx="48" ry="7" fill="var(--primary)" opacity=".85" stroke="${L}" stroke-width="2.4"/><path d="M12 80h96l-7 34H19z" fill="#D9A066" stroke="${L}" stroke-width="2.6" stroke-linejoin="round"/><path d="M15 92h90M17 104h86" stroke="${L}" stroke-width="2.2"/>`;
+    back=`<g transform="translate(60 16) rotate(-5)"><rect x="-15" y="0" width="30" height="10" rx="3" fill="#fff" stroke="${L}" stroke-width="2.2"/><path d="M-15 5h30" stroke="#7FC8E8" stroke-width="2.4"/></g>`+steam}
+  const wear=(typeof main!=='undefined'&&main.closet&&main.closet.wearing)||'';
+  const acc=hatOwn?'':frontAcc(wear,L);
+  const top=hatOwn||wear==='hat'||wear==='towel'?'':yuzu;
+  return `<svg viewBox="0 0 120 120" aria-hidden="true">${ears}${legs}${body}${back}${top}${front}${arms}${acc}</svg>`;
+}
+function frontAcc(k,L){
+  if(k==='bow') return `<g transform="translate(88 22)"><path d="M0 0l-10-7v14zM0 0l10-7v14z" fill="#FF7FA8" stroke="${L}" stroke-width="1.8" stroke-linejoin="round"/><circle r="3.2" fill="#FF7FA8" stroke="${L}" stroke-width="1.8"/></g>`;
+  if(k==='glasses') return `<circle cx="44" cy="52" r="9" fill="#fff" fill-opacity=".2" stroke="${L}" stroke-width="2.4"/><circle cx="76" cy="52" r="9" fill="#fff" fill-opacity=".2" stroke="${L}" stroke-width="2.4"/><path d="M53 52h14" stroke="${L}" stroke-width="2.4"/>`;
+  if(k==='flower') return `<g transform="translate(32 22)">${[0,72,144,216,288].map(a=>`<circle cx="${(5*Math.cos(a*Math.PI/180)).toFixed(1)}" cy="${(5*Math.sin(a*Math.PI/180)).toFixed(1)}" r="3.8" fill="#FFB3C7" stroke="${L}" stroke-width="1.2"/>`).join('')}<circle r="3" fill="var(--sun)" stroke="${L}" stroke-width="1.2"/></g>`;
+  if(k==='towel') return `<g transform="translate(60 14) rotate(-5)"><rect x="-15" y="0" width="30" height="10" rx="3" fill="#fff" stroke="${L}" stroke-width="2.2"/><path d="M-15 5h30" stroke="#7FC8E8" stroke-width="2.4"/></g>`;
+  if(k==='hat') return `<ellipse cx="60" cy="24" rx="34" ry="7" fill="#F2D27A" stroke="${L}" stroke-width="2.4"/><path d="M42 24q0-20 18-20t18 20z" fill="#F2D27A" stroke="${L}" stroke-width="2.4" stroke-linejoin="round"/><path d="M43 18h34" stroke="#E0584F" stroke-width="3.5"/>`;
+  return '';
+}
 const CAPY_LINES=['慢慢來也沒關係，一起加油！','每完成一項，我就往溫泉走一步 ♨','累了就休息一下，喝口水吧','頭上的柚子香香的～','考試前一週，我會幫你多排複習','不會的題目先做記號，明天問老師','寫完作業再積木、滑手機比較安心喔'];
 let capyLine=-1;
 function capySay(){
   let i; do{i=Math.floor(Math.random()*CAPY_LINES.length)}while(i===capyLine&&CAPY_LINES.length>1);
   capyLine=i; $('capy-say').textContent=CAPY_LINES[i];
 }
-$('mascot').innerHTML=capy('normal');
-setTimeout(()=>{$('mascot').innerHTML=capy('normal')},0);
-$('al-capy').innerHTML=capy('alert');
+$('mascot').innerHTML=sticker('normal');
+setTimeout(()=>{$('mascot').innerHTML=sticker('normal')},0);
+$('al-capy').innerHTML=sticker('alert');
 $('capy-say').textContent='我是豚豚，今天也慢慢來！';
 $('mascot').addEventListener('click',()=>{
   const m=$('mascot'); m.classList.remove('hop'); void m.offsetWidth; m.classList.add('hop');
-  m.innerHTML=capy('happy'); setTimeout(()=>{m.innerHTML=capy('normal')},900); capySay();
+  m.innerHTML=sticker('happy'); setTimeout(()=>{m.innerHTML=sticker('normal')},900); capySay();
 });
 
 /* ---------- 3: family sync (Firebase or PocketBase on a home NAS) ---------- */

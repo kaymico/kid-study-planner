@@ -1,6 +1,6 @@
 // App-shell cache: the planner works offline once it has been opened.
-const CACHE = 'kid-planner-v9';
-const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'apple-touch-icon-v3.png', 'icon-v3-192.png', 'icon-v3-512.png'];
+const CACHE = 'kid-planner-v10';
+const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'apple-touch-icon-v4.png', 'icon-v4-192.png', 'icon-v4-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

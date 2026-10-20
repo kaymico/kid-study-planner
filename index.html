@@ -492,12 +492,12 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
     </div>
     <div class="divider"></div>
     <div class="row between"><h3><span class="ic" data-stk="study" aria-hidden="true"></span>科目和課本版本</h3><button class="btn ghost" id="preset-subjects" hidden>放入常用科目</button></div>
-    <p class="muted small">選好每一科用的是哪一家的課本（康軒、南一、翰林、南山……），整理重點的時候會照著那個版本來整理。</p>
+    <p class="muted small">每一科都可以選自己學校用的版本（康軒、南一、翰林、南山……），選單裡沒有的就選「其他」自己打。整理重點時會照著那個版本。</p>
     <datalist id="publishers"><option value="康軒"><option value="南一"><option value="翰林"><option value="南山"><option value="何嘉仁"><option value="部編"><option value="學校自編"></datalist>
     <div class="subject-list" id="subject-list"></div>
     <form class="form" id="subject-form">
       <div class="field"><label for="ns-name">新科目名稱</label><input id="ns-name" maxlength="6" placeholder="例如：電腦" required></div>
-      <div class="field"><label for="ns-pub">課本版本</label><input id="ns-pub" list="publishers" maxlength="10" placeholder="例如：康軒"></div>
+      <div class="field"><label for="ns-pub">課本版本</label><span id="ns-pub-wrap"></span></div>
       <div class="field"><label for="ns-bring">上課要帶的東西</label><input id="ns-bring" maxlength="30" placeholder="例如：耳機"></div>
       <div class="field"><label for="ns-study">要排讀書時間嗎</label>
         <select id="ns-study"><option value="1">要</option><option value="0">不用</option></select></div>
@@ -684,12 +684,26 @@ const $=id=>document.getElementById(id);
 const WD=['日','一','二','三','四','五','六'];
 const PERIODS=[['08:40','09:20'],['09:30','10:10'],['10:30','11:10'],['11:20','12:00'],['13:30','14:10'],['14:20','15:00'],['15:20','16:00']];
 const PNAME=['第一節','第二節','第三節','第四節','第五節','第六節','第七節','第八節'];
+const PUBS=['康軒','南一','翰林','南山','何嘉仁','部編','學校自編'];
+function pubPicker(attrs,value,style){
+  const v=value||'';
+  if(v&&!PUBS.includes(v)) return `<input class="inline-input" ${attrs} value="${esc(v)}" maxlength="10" placeholder="哪一版？" style="${style||''}">`;
+  return `<select class="inline-input" data-pubsel="1" ${attrs} style="${style||''}"><option value="">選版本</option>${PUBS.map(x=>`<option${x===v?' selected':''}>${x}</option>`).join('')}<option value="__other">其他（自己打）</option></select>`;
+}
+// picking "其他" turns the menu into a text box in place
+document.addEventListener('change',e=>{
+  const el=e.target; if(!el.matches||!el.matches('select[data-pubsel]')||el.value!=='__other') return;
+  e.stopPropagation();
+  const inp=document.createElement('input'); inp.className='inline-input'; inp.maxLength=10; inp.placeholder='打上版本名稱';
+  [...el.attributes].forEach(a=>{if(!['data-pubsel','class'].includes(a.name)) inp.setAttribute(a.name,a.value)});
+  el.replaceWith(inp); inp.focus();
+},true);
 const PRESET_JH=[
-  {id:'zh',name:'國文',h:350,study:true,bring:'國文課本、習作',publisher:'康軒'},
-  {id:'math',name:'數學',h:215,study:true,bring:'數學課本、習作、直尺',publisher:'康軒'},
-  {id:'en',name:'英語',h:150,study:true,bring:'英語課本、習作',publisher:'翰林'},
-  {id:'sci',name:'生物',h:95,study:true,bring:'生物課本、習作',publisher:'康軒'},
-  {id:'soc',name:'社會',h:30,study:true,bring:'社會課本（歷史、地理、公民）',publisher:'翰林'},
+  {id:'zh',name:'國文',h:350,study:true,bring:'國文課本、習作',publisher:''},
+  {id:'math',name:'數學',h:215,study:true,bring:'數學課本、習作、直尺',publisher:''},
+  {id:'en',name:'英語',h:150,study:true,bring:'英語課本、習作',publisher:''},
+  {id:'sci',name:'生物',h:95,study:true,bring:'生物課本、習作',publisher:''},
+  {id:'soc',name:'社會',h:30,study:true,bring:'社會課本（歷史、地理、公民）',publisher:''},
   {id:'tech',name:'科技',h:200,study:false,bring:'',publisher:''},
   {id:'pe',name:'健體',h:185,study:false,bring:'運動服、水壺',publisher:''},
   {id:'art',name:'藝術',h:280,study:false,bring:'',publisher:''},
@@ -1013,7 +1027,7 @@ function renderTT(){
   renderActs(); renderCustoms(); renderBackupHint();
   $('subject-list').innerHTML=main.subjects.length?main.subjects.map(s=>
     `<div class="subject-row"><span class="subj" style="--h:${s.h}">${esc(s.name)}</span>
-     <input class="inline-input" list="publishers" maxlength="10" value="${esc(s.publisher||'')}" placeholder="哪一版？" data-pub="${s.id}" aria-label="${esc(s.name)}的課本版本">
+     ${pubPicker(`data-pub="${s.id}" aria-label="${esc(s.name)}的課本版本"`,s.publisher)}
      <span class="bring">${s.bring?'要帶：'+esc(s.bring):'不用帶特別的東西'}</span>
      <span class="small muted kind">${s.study?'排讀書時間':'只提醒帶東西'}</span>
      <button class="link" data-del="${s.id}" aria-label="刪除${esc(s.name)}">刪除</button></div>`).join('')
@@ -1102,6 +1116,7 @@ $('subject-list').addEventListener('click',e=>{
 });
 $('subject-list').addEventListener('change',e=>{
   const id=e.target.dataset.pub; if(!id) return; const s=subj(id); if(!s) return;
+  if(e.target.value==='__other') return;
   s.publisher=e.target.value.trim(); saveMain(); toast(`${s.name}：${s.publisher||'未設定'}版`);
 });
 $('subject-form').addEventListener('submit',e=>{
@@ -1109,8 +1124,8 @@ $('subject-form').addEventListener('submit',e=>{
   const name=$('ns-name').value.trim(); if(!name) return;
   const hues=[10,45,120,170,200,240,300,330];
   const s={id:uid('s'),name,h:hues[main.subjects.length%hues.length],study:$('ns-study').value==='1',
-    bring:$('ns-bring').value.trim(),publisher:$('ns-pub').value.trim()};
-  main.subjects.push(s); brush=s.id; e.target.reset(); saveMain(); toast('加入「'+name+'」，現在可以填進課表了');
+    bring:$('ns-bring').value.trim(),publisher:(v=>v==='__other'?'':v)($('ns-pub').value.trim())};
+  main.subjects.push(s); brush=s.id; e.target.reset(); $('ns-pub-wrap').innerHTML=pubPicker('id="ns-pub"',''); saveMain(); toast('加入「'+name+'」，現在可以填進課表了');
 });
 [['sc-name','name'],['sc-grade','grade'],['sc-term','term']].forEach(([id,k])=>{
   $(id).addEventListener('change',e=>{main.school[k]=e.target.value.trim();saveMain()});
@@ -1774,7 +1789,7 @@ function wizHTML(){
   if(wizStep===1){ if(!main.subjects.length) main.subjects=clone(isJH()?PRESET_JH:PRESET);
     body=`<div class="row"><span class="ic lg" data-stk="study"></span><h2 style="font-size:22px">科目和課本版本</h2></div>
     <p class="small muted">已經幫你放好常用科目。每一科填上課本版本（例如康軒、翰林），整理重點時會更準。</p>
-    <div style="display:flex;flex-direction:column;gap:6px">${main.subjects.filter(x=>x.study).map(x=>`<div class="row"><span class="subj" style="--h:${x.h};min-width:56px">${esc(x.name)}</span><input class="inline-input" list="publishers" data-wzpub="${x.id}" value="${esc(x.publisher||'')}" placeholder="哪一版？" style="flex:1;min-width:0"></div>`).join('')}</div>`+nav('next');}
+    <div style="display:flex;flex-direction:column;gap:6px">${main.subjects.filter(x=>x.study).map(x=>`<div class="row"><span class="subj" style="--h:${x.h};min-width:56px">${esc(x.name)}</span>${pubPicker(`data-wzpub="${x.id}" aria-label="${esc(x.name)}的課本版本"`,x.publisher,'flex:1;min-width:0')}</div>`).join('')}</div>`+nav('next');}
   if(wizStep===2) body=`<div class="row"><span class="ic lg" data-stk="write"></span><h2 style="font-size:22px">課表</h2></div>
     <p>課表可以拍照讓 AI 讀，也可以自己點格子填。按「下一步」之後，最後會帶你到課表頁面。</p>
     <p class="small muted">拍照讀課表在「課表與課本」最上面；在 GitHub 網站版會請你把指令貼到 AI App。</p>`+nav('next');
@@ -1793,7 +1808,7 @@ function wizHTML(){
 function openWiz(step){wizStep=step||0; $('wiz').innerHTML=wizHTML(); $('wiz').hidden=false}
 function wizSave(){
   if(wizStep===0){const n=($('wz-name').value||'').trim(); const k=kids.find(x=>x.id===KID); if(k&&n){k.name=n; saveKids()} main.school.grade=$('wz-grade').value; main.school.term=$('wz-term').value}
-  if(wizStep===1) document.querySelectorAll('[data-wzpub]').forEach(i=>{const x=subj(i.dataset.wzpub); if(x) x.publisher=i.value.trim()});
+  if(wizStep===1) document.querySelectorAll('[data-wzpub]').forEach(i=>{const x=subj(i.dataset.wzpub); if(x&&i.value!=='__other') x.publisher=i.value.trim()});
   if(wizStep===3){const n=($('wz-act').value||'').trim(); if(n&&wizDays.size&&toMin($('wz-ae').value)>toMin($('wz-as').value)) main.activities.push({id:uid('a'),name:n,start:$('wz-as').value,end:$('wz-ae').value,days:[...wizDays]}); wizDays=new Set()}
 }
 $('wiz').addEventListener('click',e=>{
@@ -2786,6 +2801,7 @@ function renderHeader(){
 }
 function renderAll(){applyFeatures();fillStickers(document,true);renderHeader();renderStreak();renderKids();checkNewBadges();renderPlan();renderTT();if(!quiz&&!flash&&!spell)renderNotes();renderRem();renderParent()}
 
+$('ns-pub-wrap').innerHTML=pubPicker('id="ns-pub"','');
 setFormDefaults(); renderAll(); tick(); renderLock();
 setTimeout(()=>{ if(!main.settings.onboarded&&!main.subjects.length&&!main.isExample&&$('wiz').hidden&&(!window.claude||synced)) openWiz(0) },1200);
 

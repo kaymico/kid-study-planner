@@ -698,17 +698,22 @@ document.addEventListener('change',e=>{
   [...el.attributes].forEach(a=>{if(!['data-pubsel','class'].includes(a.name)) inp.setAttribute(a.name,a.value)});
   el.replaceWith(inp); inp.focus();
 },true);
-const PRESET_JH=[
-  {id:'zh',name:'國文',h:350,study:true,bring:'國文課本、習作',publisher:''},
-  {id:'math',name:'數學',h:215,study:true,bring:'數學課本、習作、直尺',publisher:''},
-  {id:'en',name:'英語',h:150,study:true,bring:'英語課本、習作',publisher:''},
-  {id:'sci',name:'生物',h:95,study:true,bring:'生物課本、習作',publisher:''},
-  {id:'soc',name:'社會',h:30,study:true,bring:'社會課本（歷史、地理、公民）',publisher:''},
-  {id:'tech',name:'科技',h:200,study:false,bring:'',publisher:''},
-  {id:'pe',name:'健體',h:185,study:false,bring:'運動服、水壺',publisher:''},
-  {id:'art',name:'藝術',h:280,study:false,bring:'',publisher:''},
-  {id:'mus',name:'綜合',h:255,study:false,bring:'',publisher:''}
-];
+// 國中科目依 108 課綱分年級：自然科國一生物、國二理化、國三理化＋地球科學
+function jhPreset(grade){
+  const S=(id,name,h,study,bring)=>({id,name,h,study,bring,publisher:''});
+  const sci=grade==='國一'?[S('bio','生物',95,true,'生物課本、習作')]
+    :grade==='國三'?[S('phy','理化',95,true,'理化課本、習作、計算機'),S('earth','地球科學',120,true,'地科課本、習作')]
+    :[S('phy','理化',95,true,'理化課本、習作、計算機')];
+  return [S('zh','國文',350,true,'國文課本、習作'),S('en','英語',150,true,'英語課本、習作'),S('math','數學',215,true,'數學課本、習作、直尺'),
+    ...sci,
+    S('his','歷史',30,true,'歷史課本'),S('geo','地理',45,true,'地理課本'),S('civ','公民',10,true,'公民課本'),
+    S('tw','本土語',60,false,''),
+    S('health','健康',170,false,'健康課本'),S('pe','體育',185,false,'運動服、水壺'),
+    S('mus','音樂',255,false,'直笛'),S('art','視覺藝術',280,false,'畫具'),S('drama','表演藝術',300,false,''),
+    S('home','家政',20,false,''),S('scout','童軍',110,false,''),S('guide','輔導',230,false,''),
+    S('it','資訊科技',200,false,''),S('tech','生活科技',190,false,'')];
+}
+
 const PRESET=[
   {id:'zh',name:'國語',h:350,study:true,bring:'國語課本、生字簿'},
   {id:'math',name:'數學',h:215,study:true,bring:'數學課本、直尺'},
@@ -1047,12 +1052,12 @@ $('tt-clear').addEventListener('click',e=>{
   if(!clearArmed){clearArmed=true;e.target.textContent='再按一次確定清空';setTimeout(()=>{clearArmed=false;e.target.textContent='清空課表'},3000);return}
   main.timetable=blankTT(); clearArmed=false; e.target.textContent='清空課表'; saveMain(); toast('課表清空了，重新填填看吧');
 });
-$('preset-subjects').addEventListener('click',()=>{main.subjects=clone(isJH()?PRESET_JH:PRESET);saveMain()});
+$('preset-subjects').addEventListener('click',()=>{main.subjects=isJH()?jhPreset(main.school.grade):clone(PRESET);saveMain()});
 function isJH(){return /^國[一二三]/.test(main.school.grade||'')}
 
 /* timetable from a photo */
 let ttGen=false, ttPreview=null;
-const NONSTUDY=/體育|健康|健體|音樂|美術|美勞|視覺|表演|藝術|童軍|家政|輔導|綜合|班會|社團|週會|自習|彈性/;
+const NONSTUDY=/體育|健康|健體|音樂|美術|美勞|視覺|表演|藝術|童軍|家政|輔導|綜合|班會|社團|週會|自習|彈性|資訊|生活科技|本土|閩南|客家|原住民/;
 function renderTTPhoto(){
   const el=$('tt-photo'); if(!el) return;
   if(ttPreview){
@@ -1786,7 +1791,7 @@ function wizHTML(){
     <div class="field"><label for="wz-name">你的名字（或暱稱）</label><input id="wz-name" maxlength="10" value="${esc(kname)}" placeholder="例如：晴晴"></div>
     <div class="form"><div class="field"><label for="wz-grade">年級</label><select id="wz-grade">${['一年級','二年級','三年級','四年級','五年級','六年級','國一','國二','國三'].map(g=>`<option${g===st.grade?' selected':''}>${g}</option>`).join('')}</select></div>
     <div class="field"><label for="wz-term">學期</label><select id="wz-term"><option value="上"${st.term!=='下'?' selected':''}>上學期</option><option value="下"${st.term==='下'?' selected':''}>下學期</option></select></div></div>`+nav('next');
-  if(wizStep===1){ if(!main.subjects.length) main.subjects=clone(isJH()?PRESET_JH:PRESET);
+  if(wizStep===1){ if(!main.subjects.length) main.subjects=isJH()?jhPreset(main.school.grade):clone(PRESET);
     body=`<div class="row"><span class="ic lg" data-stk="study"></span><h2 style="font-size:22px">科目和課本版本</h2></div>
     <p class="small muted">已經幫你放好常用科目。每一科填上課本版本（例如康軒、翰林），整理重點時會更準。</p>
     <div style="display:flex;flex-direction:column;gap:6px">${main.subjects.filter(x=>x.study).map(x=>`<div class="row"><span class="subj" style="--h:${x.h};min-width:56px">${esc(x.name)}</span>${pubPicker(`data-wzpub="${x.id}" aria-label="${esc(x.name)}的課本版本"`,x.publisher,'flex:1;min-width:0')}</div>`).join('')}</div>`+nav('next');}
@@ -2078,7 +2083,7 @@ function capDate(){
 function capBlocks(dk,dow){
   const g=main.school.grade||''; if(g!=='國二'&&g!=='國三') return [];
   const want=g==='國三'?(dow===6?'國一':'國二'):(dow===6?'國一':null); if(!want) return [];
-  const core=main.subjects.filter(x=>x.study&&/國文|數學|英語|英文|生物|理化|自然|地科|社會|歷史|地理|公民/.test(x.name));
+  const core=main.subjects.filter(x=>x.study&&/國文|數學|英語|英文|生物|理化|自然|地科|地球|社會|歷史|地理|公民/.test(x.name));
   if(!core.length) return [];
   const wk=Math.floor(Date.parse(dk+'T00:00:00')/6048e5), sb=core[wk%core.length];
   return [['cap','cap-'+sb.id,sb.name+' '+want+'複習',20,sb.id,`會考三年都考，這週挑一個${want}的單元複習。可以到「重點練習」選${want}來整理。`]];

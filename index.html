@@ -465,7 +465,7 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
       <div class="field"><label for="sc-grade">年級</label>
         <select id="sc-grade"><option value="">請選擇</option>
           <option>一年級</option><option>二年級</option><option>三年級</option><option>四年級</option><option>五年級</option><option>六年級</option>
-          <option>國一</option><option>國二</option><option>國三</option></select></div>
+          <option>七年級</option><option>八年級</option><option>九年級</option></select></div>
       <div class="field"><label for="sc-term">學期</label>
         <select id="sc-term"><option value="上">上學期</option><option value="下">下學期</option></select></div>
     </div>
@@ -549,7 +549,7 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
     </div>
     <div class="form" id="cap-wrap" hidden>
       <div class="field"><label for="set-cap">國中教育會考日期</label><input type="date" id="set-cap"></div>
-      <p class="muted small" style="grid-column:1/-1;margin:0">先放的是預估日期，教育部公布正式日期後請改一下。國二、國三的週末會自動排一點國一、國二的複習，因為會考三年都考。</p>
+      <p class="muted small" style="grid-column:1/-1;margin:0">先放的是預估日期，教育部公布正式日期後請改一下。八年級、九年級的週末會自動排一點七年級、八年級的複習，因為會考三年都考。</p>
     </div>
     <div class="row between" hidden>
     </div>
@@ -715,11 +715,11 @@ document.addEventListener('change',e=>{
   [...el.attributes].forEach(a=>{if(!['data-pubsel','class'].includes(a.name)) inp.setAttribute(a.name,a.value)});
   el.replaceWith(inp); inp.focus();
 },true);
-// 國中科目依 108 課綱分年級：自然科國一生物、國二理化、國三理化＋地球科學
+// 國中科目依 108 課綱分年級：自然科七年級生物、八年級理化、九年級理化＋地球科學
 function jhPreset(grade){
   const S=(id,name,h,study,bring)=>({id,name,h,study,bring,publisher:''});
-  const sci=grade==='國一'?[S('bio','生物',95,true,'生物課本、習作')]
-    :grade==='國三'?[S('phy','理化',95,true,'理化課本、習作、計算機'),S('earth','地球科學',120,true,'地科課本、習作')]
+  const sci=grade==='七年級'?[S('bio','生物',95,true,'生物課本、習作')]
+    :grade==='九年級'?[S('phy','理化',95,true,'理化課本、習作、計算機'),S('earth','地球科學',120,true,'地科課本、習作')]
     :[S('phy','理化',95,true,'理化課本、習作、計算機')];
   return [S('zh','國文',350,true,'國文課本、習作'),S('en','英語',150,true,'英語課本、習作'),S('math','數學',215,true,'數學課本、習作、直尺'),
     ...sci,
@@ -770,7 +770,7 @@ function normalize(m){
     customs:Array.isArray(m.customs)?m.customs:[],
     reminders:Array.isArray(m.reminders)?m.reminders:[],
     exams:Array.isArray(m.exams)?m.exams:[],
-    school:Object.assign({name:'',grade:'',term:'上'},m.school||{}),
+    school:(sc=>({...sc,grade:({'國一':'七年級','國二':'八年級','國三':'九年級'})[sc.grade]||sc.grade}))(Object.assign({name:'',grade:'',term:'上'},m.school||{})),
     message:m.message||null,
     isExample:!!m.isExample,
     periods:Array.isArray(m.periods)&&m.periods.length?m.periods.slice(0,8):null
@@ -1070,7 +1070,7 @@ $('tt-clear').addEventListener('click',e=>{
   main.timetable=blankTT(); clearArmed=false; e.target.textContent='清空課表'; saveMain(); toast('課表清空了，重新填填看吧');
 });
 $('preset-subjects').addEventListener('click',()=>{main.subjects=isJH()?jhPreset(main.school.grade):clone(PRESET);saveMain()});
-function isJH(){return /^國[一二三]/.test(main.school.grade||'')}
+function isJH(){return /^[七八九]年級$/.test(main.school.grade||'')}
 
 /* timetable from a photo */
 let ttGen=false, ttPreview=null;
@@ -1182,7 +1182,7 @@ function renderNotes(){
       <span class="small muted">${esc(sc.name||'學校未填')}・${esc(sc.grade||'年級未填')}・${sc.term==='下'?'下':'上'}學期</span></div>
     ${aiBanner()}
     ${true?`${modeHTML}${genMode==='exam'?examFormHTML:''}<form class="form" id="gen-form" ${genMode==='exam'?'hidden':''}>
-      <div class="field"><label for="g-grade">哪個年級的內容</label><select id="g-grade">${["一年級","二年級","三年級","四年級","五年級","六年級","國一","國二","國三"].map(g=>`<option${g===(drafts["g-grade"]||main.school.grade)?" selected":""}>${g}</option>`).join("")}</select></div>
+      <div class="field"><label for="g-grade">哪個年級的內容</label><select id="g-grade">${["一年級","二年級","三年級","四年級","五年級","六年級","七年級","八年級","九年級"].map(g=>`<option${g===(drafts["g-grade"]||main.school.grade)?" selected":""}>${g}</option>`).join("")}</select></div>
       <div class="field"><label for="g-subj">科目</label><select id="g-subj" required>${studySubjects.map(s=>`<option value="${s.id}"${s.id===practiceFilter?' selected':''}>${esc(s.name)}${s.publisher?'（'+esc(s.publisher)+'）':''}</option>`).join('')}</select></div>
       <div class="field"><label for="g-unit">第幾課／單元</label><input id="g-unit" maxlength="30" placeholder="例如：L3 或 第 2 章" value="${esc(drafts['g-unit']||'')}" required></div>
       <div class="field full"><label for="g-input">老師說的重點、課本內容（可以貼上或自己打，沒有也可以）</label>
@@ -1198,7 +1198,7 @@ function renderNotes(){
     <div class="divider"></div>
     ${mockCandidates().map(c=>`<div class="bag" data-feat="mock" style="border-color:var(--bad)"><div class="row between"><div><div class="label"><span class="ic" data-stk="cheer" aria-hidden="true"></span>模擬考</div><b style="font-family:var(--f-display);font-size:18px">${esc(subj(c.e.sid).name)} ${esc(c.e.title)}（${c.e.days===0?'今天':c.e.days+' 天後'}）</b>
       <div class="small muted">從這一科的練習題抽 ${Math.min(20,c.items.length)} 題，限時作答，像真的考試一樣。</div></div><button class="btn primary" data-mock="${c.e.id}">開始模擬考</button></div></div>`).join('')}
-    <div class="bag" data-feat="math"><div class="label"><span class="ic" data-stk="think" aria-hidden="true"></span>數學無限練習（國二上）</div><span class="small muted">程式自動出題，每次數字都不一樣，不用網路也能練。答錯的會進錯題本。</span>
+    <div class="bag" data-feat="math"><div class="label"><span class="ic" data-stk="think" aria-hidden="true"></span>數學無限練習（八年級上）</div><span class="small muted">程式自動出題，每次數字都不一樣，不用網路也能練。答錯的會進錯題本。</span>
       <div class="units">${MATH_UNITS.map(u=>`<button class="unit-btn" data-mathgen="${u.id}">${u.name}</button>`).join('')}</div></div>
     <div class="bag" data-feat="cards"><div class="label"><span class="ic" data-stk="study" aria-hidden="true"></span>字卡（英文單字、國文注釋、生物名詞……）</div>
       <form class="form" id="vocab-form">
@@ -1488,7 +1488,7 @@ ${files.length?`另外附上 ${files.length} 張課本、筆記或考卷的照�
 
 /* ---------- exams & reminders ---------- */
 function renderRem(){
-  const jh=/^國[一二三]/.test(main.school.grade||''); $('cap-wrap').hidden=!jh; if(jh) setVal('set-cap',capDate()||'');
+  const jh=isJH(); $('cap-wrap').hidden=!jh; if(jh) setVal('set-cap',capDate()||'');
   const sel=$('ne-subj'), cur=sel.value;
   sel.innerHTML=main.subjects.filter(s=>s.study).map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
   if(cur) sel.value=cur;
@@ -1845,7 +1845,7 @@ function wizHTML(){
   if(wizStep===0) body=`<div class="row"><span class="ic lg" data-stk="happy"></span><h2 style="font-size:22px">嗨！我是豚豚</h2></div>
     <p>花 3 分鐘把基本資料填好，我就能幫你排每天的讀書計劃。</p>
     <div class="field"><label for="wz-name">你的名字（或暱稱）</label><input id="wz-name" maxlength="10" value="${esc(kname)}" placeholder="例如：晴晴"></div>
-    <div class="form"><div class="field"><label for="wz-grade">年級</label><select id="wz-grade">${['一年級','二年級','三年級','四年級','五年級','六年級','國一','國二','國三'].map(g=>`<option${g===st.grade?' selected':''}>${g}</option>`).join('')}</select></div>
+    <div class="form"><div class="field"><label for="wz-grade">年級</label><select id="wz-grade">${['一年級','二年級','三年級','四年級','五年級','六年級','七年級','八年級','九年級'].map(g=>`<option${g===st.grade?' selected':''}>${g}</option>`).join('')}</select></div>
     <div class="field"><label for="wz-term">學期</label><select id="wz-term"><option value="上"${st.term!=='下'?' selected':''}>上學期</option><option value="下"${st.term==='下'?' selected':''}>下學期</option></select></div></div>`+nav('next');
   if(wizStep===1){ if(!main.subjects.length) main.subjects=isJH()?jhPreset(main.school.grade):clone(PRESET);
     body=`<div class="row"><span class="ic lg" data-stk="study"></span><h2 style="font-size:22px">科目和課本版本</h2></div>
@@ -2033,7 +2033,7 @@ $('ics-btn').addEventListener('click',async()=>{
   }catch(e){ if(e&&e.code==='cancelled') return; toast('沒辦法匯出，請用 Safari 打開網站再試') }
 });
 
-/* ---------- 2: math generator (國二上) ---------- */
+/* ---------- 2: math generator (八年級上) ---------- */
 const RI=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
 const PICK=a=>a[Math.floor(Math.random()*a.length)];
 function mc(right,wrongs,q,explain){
@@ -2129,16 +2129,16 @@ function startMock(examId){
   openNote=null; keepQuiz=true; showTab('notes');
 }
 
-/* ---------- 會考 & 國一複習 ---------- */
+/* ---------- 會考 & 七年級複習 ---------- */
 function capDate(){
   if(main.settings.capDate) return main.settings.capDate;
-  const g=main.school.grade||''; const left={'國三':0,'國二':1,'國一':2}[g]; if(left==null) return null;
+  const g=main.school.grade||''; const left={'九年級':0,'八年級':1,'七年級':2}[g]; if(left==null) return null;
   const n=now(), endYear=(n.getMonth()>=7?n.getFullYear()+1:n.getFullYear())+left;
   return `${endYear}-05-16`;
 }
 function capBlocks(dk,dow){
-  const g=main.school.grade||''; if(g!=='國二'&&g!=='國三') return [];
-  const want=g==='國三'?(dow===6?'國一':'國二'):(dow===6?'國一':null); if(!want) return [];
+  const g=main.school.grade||''; if(g!=='八年級'&&g!=='九年級') return [];
+  const want=g==='九年級'?(dow===6?'七年級':'八年級'):(dow===6?'七年級':null); if(!want) return [];
   const core=main.subjects.filter(x=>x.study&&/國文|數學|英語|英文|生物|理化|自然|地科|地球|社會|歷史|地理|公民/.test(x.name));
   if(!core.length) return [];
   const wk=Math.floor(Date.parse(dk+'T00:00:00')/6048e5), sb=core[wk%core.length];

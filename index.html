@@ -677,6 +677,7 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
     <div class="mai-step"><b>3</b><div><button class="btn primary mai-big" id="mai-paste" type="button">回到這裡，按我貼上</button></div></div>
     <details class="small"><summary class="muted">打不開 ChatGPT？其他方法</summary>
       <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+        <span class="small">想要不用複製貼上？到「重點練習」看「用 Claude 帳號，AI 全自動」。</span>
         <div class="row"><a class="btn ghost" id="mai-claude" href="#" target="_blank" rel="noopener" style="padding:4px 12px">改用 Claude 問</a><button class="btn ghost" id="mai-copy" type="button" style="padding:4px 12px">只複製問題</button></div>
         <textarea id="mai-prompt" class="inline-input" readonly style="min-height:80px;font-size:12px"></textarea>
       </div></details>
@@ -1183,7 +1184,7 @@ function renderNotes(){
     </form>
     ${gen?`<div class="thinking"><span class="ic think-bob" data-stk="think" aria-hidden="true"></span><span>正在整理「${esc(gen)}」，大約要半分鐘……</span><button class="btn ghost" id="gen-stop">停止</button></div>`:''}
     ${!studySubjects.length?'<p class="muted small">先到「課表與課本」加入科目，才能整理重點。</p>':''}
-    ${aiMode()==='manual'?'<div class="note">按下去之後會帶你到 ChatGPT 問，回答複製回來就完成了。</div>':aiMode()==='nas'?'<div class="note">AI 整理由家裡的 NAS 幫忙。</div>':''}
+    ${aiMode()==='manual'?claudeCard():aiMode()==='nas'?'<div class="note">AI 整理由家裡的 NAS 幫忙。</div>':''}
     <p class="muted small">AI 會照著年級和課本版本整理重點，再出 5 題選擇題。打上或拍下課本內容會最準；沒有提供的話，它只能依課綱和常見教材來整理，內容請爸媽或老師幫忙看一下。</p>`
     :`<div class="note">AI 整理重點要在 Claude 裡打開這一頁才能用。已經整理好的重點和練習題還是可以看、可以練習。</div>`}
     <div class="divider"></div>
@@ -1705,6 +1706,22 @@ document.addEventListener('click',e=>{
 });
 
 /* ---------- AI layer ---------- */
+// 這個網站沒辦法直接登入 Claude 帳號；Claude 帳號只能在 Claude 上的版本使用，所以這裡提供「帶著資料搬過去」的入口
+const CLAUDE_URL='https://claude.ai/artifact/MTjJRyEB6GgVZ2CQVXwY4t';
+function claudeCard(){
+  return `<div class="bag" style="border-color:var(--primary)"><div class="label"><span class="ic" data-stk="happy" aria-hidden="true"></span>用 Claude 帳號，AI 全自動</div>
+    <span class="small">現在是用 ChatGPT 複製貼上。改用 <b>Claude 帳號版</b> 的小書包，整理重點、拍照讀課表都會自動完成，不用切換 App。</span>
+    <ol class="small" style="margin:0;padding-left:20px">
+      <li>請爸媽在 Claude 版的「分享」裡，用你的 email 邀請你。</li>
+      <li>按「把資料帶過去」，存下備份檔。</li>
+      <li>按「打開 Claude 版」，用 Claude 帳號登入，到「課表與課本」最下面按「匯入備份」。</li>
+    </ol>
+    <div class="row"><button class="btn ghost" type="button" id="to-claude-backup" style="padding:4px 12px">把資料帶過去</button>
+      <a class="btn primary" href="${CLAUDE_URL}" target="_blank" rel="noopener" style="padding:4px 12px;text-decoration:none">打開 Claude 版</a></div>
+    <span class="small muted">不想換也沒關係，按下面的「幫我整理」一樣會帶你到 ChatGPT。</span></div>`;
+}
+document.addEventListener('click',e=>{ if(e.target.id==='to-claude-backup') $('bk-export').click() });
+
 let pbClient=null, nasAIok=null;
 function aiMode(){ if(ask) return 'claude'; if(pbClient&&nasAIok) return 'nas'; return 'manual'; }
 function aiImg(){ const m=aiMode(); return m==='claude'?imagesOK:m==='nas'; }

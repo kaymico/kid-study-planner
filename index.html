@@ -178,6 +178,13 @@ body.off-peek .peek{display:none}
 .pulse{animation:pulse 1s ease-in-out 3}
 @keyframes pulse{50%{transform:scale(1.05);box-shadow:0 0 0 6px var(--primary-soft)}}
 @media (prefers-reduced-motion:reduce){.pulse{animation:none}}
+/* iPhone: native date/time boxes ignore width and spill into the next column unless reset */
+.form>*{min-width:0}
+input[type="date"],input[type="time"]{-webkit-appearance:none;appearance:none;display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box;min-height:44px;text-align:left;line-height:1.4;background:var(--paper)}
+input[type="date"]::-webkit-date-and-time-value,input[type="time"]::-webkit-date-and-time-value{text-align:left;margin:0}
+input[type="date"]::-webkit-calendar-picker-indicator{opacity:.6}
+.field input,.field select,.field textarea,.inline-input{min-height:44px}
+.field textarea{min-height:84px}
 .hero{display:flex;gap:12px;align-items:flex-end;min-width:0}
 .hero .hello{min-width:0}
 .mascot{width:100px;flex:none;cursor:pointer;background:none;border:0;padding:0}

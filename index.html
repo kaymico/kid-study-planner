@@ -171,6 +171,13 @@ body.off-peek .peek{display:none}
 .daily .ic{width:52px}
 .daily>div{flex:1;min-width:0}
 .foot{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;font-size:13px}
+.mai-step{display:flex;gap:10px;align-items:flex-start}
+.mai-step>b{flex:none;width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-size:14px}
+.mai-step>div{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.mai-big{display:block;width:100%;text-align:center;padding:12px 16px;font-size:16px;text-decoration:none}
+.pulse{animation:pulse 1s ease-in-out 3}
+@keyframes pulse{50%{transform:scale(1.05);box-shadow:0 0 0 6px var(--primary-soft)}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none}}
 .hero{display:flex;gap:12px;align-items:flex-end;min-width:0}
 .hero .hello{min-width:0}
 .mascot{width:100px;flex:none;cursor:pointer;background:none;border:0;padding:0}
@@ -663,22 +670,19 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
 <div class="overlay" id="wiz" hidden></div>
 <div class="overlay" id="mai" hidden>
   <div class="alert" role="dialog" aria-labelledby="mai-title" style="text-align:left;max-width:540px;max-height:calc(100% - 20px);overflow:auto">
-    <div class="row"><span class="ic lg" data-stk="think" aria-hidden="true"></span><h2 id="mai-title" style="font-size:20px">請 AI App 幫忙</h2></div>
-    <ol class="small" style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:2px">
-      <li>按「用 ChatGPT 問」或「用 Claude 問」，指令會自動帶過去，按送出就好。</li>
-      <li id="mai-img">如果有照片（課本、課表、聯絡簿、單字表），在 AI App 裡一起附上。</li>
-      <li>AI 回答完，按回答下面的「複製」，回到這裡按「貼上 AI 的回答」。</li>
-    </ol>
-    <textarea id="mai-prompt" class="inline-input" readonly style="min-height:90px;font-size:12px"></textarea>
-    <div class="row">
-      <a class="btn sun" id="mai-gpt" href="#" target="_blank" rel="noopener">用 ChatGPT 問</a>
-      <a class="btn sun" id="mai-claude" href="#" target="_blank" rel="noopener">用 Claude 問</a>
-      <button class="btn ghost" id="mai-copy" type="button">只複製指令</button>
-    </div>
-    <div><button class="btn primary" id="mai-paste" type="button">貼上 AI 的回答</button></div>
-    <textarea id="mai-ans" class="inline-input" placeholder="按「貼上 AI 的回答」，或自己長按貼在這裡" style="min-height:90px"></textarea>
+    <div class="row"><span class="ic lg" data-stk="think" aria-hidden="true"></span><h2 id="mai-title" style="font-size:20px">請 ChatGPT 幫忙</h2></div>
+    <div class="mai-step"><b>1</b><div><a class="btn sun mai-big" id="mai-gpt" href="#" target="_blank" rel="noopener">打開 ChatGPT 問問看</a>
+      <span class="small muted">問題已經幫你打好了，到 ChatGPT 按送出就好。<span id="mai-img">有照片的話，在 ChatGPT 裡按「＋」一起附上。</span></span></div></div>
+    <div class="mai-step"><b>2</b><div><span>ChatGPT 回答完，按回答下面的 <b>複製</b> 圖示。</span></div></div>
+    <div class="mai-step"><b>3</b><div><button class="btn primary mai-big" id="mai-paste" type="button">回到這裡，按我貼上</button></div></div>
+    <details class="small"><summary class="muted">打不開 ChatGPT？其他方法</summary>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+        <div class="row"><a class="btn ghost" id="mai-claude" href="#" target="_blank" rel="noopener" style="padding:4px 12px">改用 Claude 問</a><button class="btn ghost" id="mai-copy" type="button" style="padding:4px 12px">只複製問題</button></div>
+        <textarea id="mai-prompt" class="inline-input" readonly style="min-height:80px;font-size:12px"></textarea>
+      </div></details>
+    <textarea id="mai-ans" class="inline-input" placeholder="貼不上的話，長按這裡選「貼上」" style="min-height:70px"></textarea>
     <div id="mai-err"></div>
-    <div class="row"><button class="btn primary" id="mai-ok" type="button">完成</button><button class="btn ghost" id="mai-cancel" type="button">取消</button></div>
+    <div class="row"><button class="btn ghost" id="mai-ok" type="button">我自己貼好了</button><button class="btn ghost" id="mai-cancel" type="button">取消</button></div>
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
@@ -1179,7 +1183,7 @@ function renderNotes(){
     </form>
     ${gen?`<div class="thinking"><span class="ic think-bob" data-stk="think" aria-hidden="true"></span><span>正在整理「${esc(gen)}」，大約要半分鐘……</span><button class="btn ghost" id="gen-stop">停止</button></div>`:''}
     ${!studySubjects.length?'<p class="muted small">先到「課表與課本」加入科目，才能整理重點。</p>':''}
-    ${aiMode()==='manual'?'<div class="note">這台裝置會請你把指令複製到 AI App（ChatGPT、Gemini、Claude 都可以），再把回答貼回來。</div>':aiMode()==='nas'?'<div class="note">AI 整理由家裡的 NAS 幫忙。</div>':''}
+    ${aiMode()==='manual'?'<div class="note">按下去之後會帶你到 ChatGPT 問，回答複製回來就完成了。</div>':aiMode()==='nas'?'<div class="note">AI 整理由家裡的 NAS 幫忙。</div>':''}
     <p class="muted small">AI 會照著年級和課本版本整理重點，再出 5 題選擇題。打上或拍下課本內容會最準；沒有提供的話，它只能依課綱和常見教材來整理，內容請爸媽或老師幫忙看一下。</p>`
     :`<div class="note">AI 整理重點要在 Claude 裡打開這一頁才能用。已經整理好的重點和練習題還是可以看、可以練習。</div>`}
     <div class="divider"></div>
@@ -1742,13 +1746,18 @@ function manualAI(prompt,opts){
   });
 }
 $('mai-copy').addEventListener('click',()=>{navigator.clipboard.writeText($('mai-prompt').value).then(()=>toast('指令複製好了，貼到 AI App')).catch(()=>{$('mai-prompt').select();toast('已選好，按「拷貝」')})});
+let maiLeft=false;
+$('mai-gpt').addEventListener('click',()=>{maiLeft=true});
+$('mai-claude').addEventListener('click',()=>{maiLeft=true});
+document.addEventListener('visibilitychange',()=>{ if(document.hidden||$('mai').hidden||!maiLeft) return; maiLeft=false;
+  const b=$('mai-paste'); b.classList.remove('pulse'); void b.offsetWidth; b.classList.add('pulse'); toast('回來了！複製好回答就按「貼上」') });
 $('mai-paste').addEventListener('click',async()=>{
   try{const t=await navigator.clipboard.readText(); if(!t){toast('剪貼簿是空的，先在 AI App 按「複製」');return} $('mai-ans').value=t; $('mai-ok').click()}
   catch(e){$('mai-ans').focus(); toast('請長按下面的格子，選「貼上」')}
 });
 $('mai-ok').addEventListener('click',()=>{
   try{const v=parseJSONText($('mai-ans').value); $('mai').hidden=true; const r=maiResolve; maiResolve=maiReject=null; r&&r(v)}
-  catch(e){$('mai-err').innerHTML='<div class="warnbox">看不懂貼上的內容。請把 AI 的回答「整段」複製過來，裡面要有 { 和 } 包起來的資料。</div>'}
+  catch(e){$('mai-err').innerHTML='<div class="warnbox">好像沒有複製到 ChatGPT 的回答。回到 ChatGPT，按回答最下面的「複製」圖示，再回來按一次貼上。</div>'}
 });
 $('mai-cancel').addEventListener('click',()=>{$('mai').hidden=true; const r=maiReject; maiResolve=maiReject=null; r&&r({code:'cancelled'})});
 const manualBtn=(id,label)=>`<button class="btn ghost" type="button" id="${id}" style="padding:4px 12px">${label}</button>`;

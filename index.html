@@ -452,7 +452,7 @@ table.scores{width:100%;border-collapse:collapse;font-size:14px}
       <div class="feats" id="feats"></div>
       <span class="small muted">用不到的先關掉，畫面會清爽很多，資料不會不見。</span>
     </div>
-    <div class="row" style="gap:8px"><button class="btn ghost" type="button" id="wiz-again" style="padding:3px 12px">重新看一次設定導覽</button></div>
+    <div class="row" style="gap:8px"><button class="btn ghost" type="button" id="wiz-again" style="padding:3px 12px">重新看一次設定導覽</button><button class="btn ghost" type="button" id="claude-login-go" data-feat-claude style="padding:3px 12px">登入 Claude 帳號（AI 全自動）</button></div>
     <p class="muted small">計劃的排法：先寫作業。一週內有考試的科目排在最前面，越接近考試，複習時間加越多（7 天內 +10 分鐘，3 天內 +15 分鐘，明天考 +20 分鐘）。接著複習今天上過的科目、預習明天的科目，每讀兩科休息 10 分鐘，最後整理書包。有補習、才藝的時段會自動跳過，超過「最晚幾點結束」的項目會列出來，提醒你改到週末。錯題本有到期的題目時，也會排進「錯題複習」。</p>
   </section>
 
@@ -1180,6 +1180,7 @@ function renderNotes(){
   v.innerHTML=`<div style="display:flex;flex-direction:column;gap:18px">
     <div class="row between"><h2><span class="ic" data-stk="think" aria-hidden="true"></span>整理上課重點</h2>
       <span class="small muted">${esc(sc.name||'學校未填')}・${esc(sc.grade||'年級未填')}・${sc.term==='下'?'下':'上'}學期</span></div>
+    ${aiBanner()}
     ${true?`${modeHTML}${genMode==='exam'?examFormHTML:''}<form class="form" id="gen-form" ${genMode==='exam'?'hidden':''}>
       <div class="field"><label for="g-grade">哪個年級的內容</label><select id="g-grade">${["一年級","二年級","三年級","四年級","五年級","六年級","國一","國二","國三"].map(g=>`<option${g===(drafts["g-grade"]||main.school.grade)?" selected":""}>${g}</option>`).join("")}</select></div>
       <div class="field"><label for="g-subj">科目</label><select id="g-subj" required>${studySubjects.map(s=>`<option value="${s.id}"${s.id===practiceFilter?' selected':''}>${esc(s.name)}${s.publisher?'（'+esc(s.publisher)+'）':''}</option>`).join('')}</select></div>
@@ -1191,7 +1192,7 @@ function renderNotes(){
     </form>
     ${gen?`<div class="thinking"><span class="ic think-bob" data-stk="think" aria-hidden="true"></span><span>正在整理「${esc(gen)}」，大約要半分鐘……</span><button class="btn ghost" id="gen-stop">停止</button></div>`:''}
     ${!studySubjects.length?'<p class="muted small">先到「課表與課本」加入科目，才能整理重點。</p>':''}
-    ${aiMode()==='manual'?claudeCard():aiMode()==='nas'?'<div class="note">AI 整理由家裡的 NAS 幫忙。</div>':''}
+    ${aiMode()==='manual'?'<div class="note">按「幫我整理」會帶你到 ChatGPT 問，回答複製回來就完成了。</div>':aiMode()==='nas'?'<div class="note">AI 整理由家裡的 NAS 幫忙。</div>':''}
     <p class="muted small">AI 會照著年級和課本版本整理重點，再出 5 題選擇題。打上或拍下課本內容會最準；沒有提供的話，它只能依課綱和常見教材來整理，內容請爸媽或老師幫忙看一下。</p>`
     :`<div class="note">AI 整理重點要在 Claude 裡打開這一頁才能用。已經整理好的重點和練習題還是可以看、可以練習。</div>`}
     <div class="divider"></div>
@@ -1715,6 +1716,16 @@ document.addEventListener('click',e=>{
 /* ---------- AI layer ---------- */
 // 這個網站沒辦法直接登入 Claude 帳號；Claude 帳號只能在 Claude 上的版本使用，所以這裡提供「帶著資料搬過去」的入口
 const CLAUDE_URL='https://claude.ai/artifact/MTjJRyEB6GgVZ2CQVXwY4t';
+let showClaudeSteps=false;
+function aiBanner(){
+  if(aiMode()==='claude') return `<div class="note row" style="gap:8px"><span class="ic" data-stk="happy" aria-hidden="true"></span><span>已經用 Claude 帳號登入，AI 會自動整理。</span></div>`;
+  if(aiMode()==='nas') return '';
+  return `<div><button class="btn primary mai-big" type="button" id="claude-login">${showClaudeSteps?'收起來':'登入 Claude 帳號，AI 全自動'}</button></div>${showClaudeSteps?claudeCard():''}`;
+}
+document.addEventListener('click',e=>{
+  if(e.target.id==='claude-login'){showClaudeSteps=!showClaudeSteps; renderNotes(); return}
+  if(e.target.id==='claude-login-go'){showClaudeSteps=true; showTab('notes'); setTimeout(()=>{const el=$('claude-login'); el&&el.scrollIntoView({block:'center'})},50)}
+});
 function claudeCard(){
   return `<div class="bag" style="border-color:var(--primary)"><div class="label"><span class="ic" data-stk="happy" aria-hidden="true"></span>用 Claude 帳號，AI 全自動</div>
     <span class="small">現在是用 ChatGPT 複製貼上。改用 <b>Claude 帳號版</b> 的小書包，整理重點、拍照讀課表都會自動完成，不用切換 App。</span>
@@ -1725,7 +1736,7 @@ function claudeCard(){
     </ol>
     <div class="row"><button class="btn ghost" type="button" id="to-claude-backup" style="padding:4px 12px">把資料帶過去</button>
       <a class="btn primary" href="${CLAUDE_URL}" target="_blank" rel="noopener" style="padding:4px 12px;text-decoration:none">打開 Claude 版</a></div>
-    <span class="small muted">不想換也沒關係，按下面的「幫我整理」一樣會帶你到 ChatGPT。</span></div>`;
+    <span class="small muted">為什麼不能在這裡直接登入？Claude 不讓別的網站用你的帳號，只有 Claude 上的小書包可以，所以要搬過去。不想換也沒關係，按下面的「幫我整理」一樣會帶你到 ChatGPT。</span></div>`;
 }
 document.addEventListener('click',e=>{ if(e.target.id==='to-claude-backup') $('bk-export').click() });
 
@@ -1815,6 +1826,7 @@ const FEATS=[["mood", "心情打卡"], ["contact", "聯絡簿"], ["daily", "每�
 const SIMPLE_OFF=['closet','badges','mock','math','custom','sound','peek','confetti'];
 const featOff=k=>!!(main.settings.off||[]).includes(k);
 function applyFeatures(){
+  const cg=$('claude-login-go'); if(cg) cg.hidden=aiMode()!=='manual';
   FEATS.forEach(([k])=>document.body.classList.toggle('off-'+k,featOff(k)));
   $('feats').innerHTML=FEATS.map(([k,l])=>`<button type="button" class="feat" data-feat-toggle="${k}" aria-pressed="${!featOff(k)}">${l}</button>`).join('');
 }
